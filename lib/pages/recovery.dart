@@ -76,7 +76,7 @@ class RecoveryPage extends StatelessWidget {
               SizedBox(
                 height: MediaQuery.of(context).size.height * 0.02,
               ),
-              Text("Для восстановления ддоступа к своему аккаунту, пожалуйста введите свлю почту ",
+              Text("Для восстановления доступа к своему аккаунту, пожалуйста введите свлю почту ",
               textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold),)
             ],
           ),

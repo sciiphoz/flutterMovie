@@ -17,7 +17,7 @@ class _RegPageState extends State<RegPage> {
   TextEditingController passwordController = TextEditingController();
   TextEditingController repeatController = TextEditingController();
   
-  UserRequests usersTable = UserRequests();
+  UserRequests userRequests = UserRequests();
   AuthService authService = AuthService();
   @override
   Widget build(BuildContext context) {
@@ -144,7 +144,7 @@ class _RegPageState extends State<RegPage> {
                       var user = await authService.signUp(emailController.text, passwordController.text);
       
                       if (user != null) {
-                        await usersTable.addUser(nameController.text, emailController.text, passwordController.text);
+                        await userRequests.addUser(nameController.text, emailController.text, passwordController.text);
                         final prefs = await SharedPreferences.getInstance();
                         await prefs.setBool("isLoggedIn", true);
       

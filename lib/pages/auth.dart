@@ -131,7 +131,7 @@ class _AuthPageState extends State<AuthPage> {
               SizedBox(
                 width: MediaQuery.of(context).size.width * 0.5,
                 child: OutlinedButton(onPressed: (){
-                  Navigator.popAndPushNamed(context, '/reg');
+                  Navigator.popAndPushNamed(context, '/registration');
                 }, child: Text("Зарегистрироваться")),
               )
             ],
