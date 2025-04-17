@@ -37,7 +37,6 @@ class _MoviePageState extends State<MoviePage> {
           return {
             'id': item['id']?.toString() ?? '',
             'name_film': item['name_film']?.toString() ?? '',
-            'url_film': item['url_film']?.toString() ?? '',
             'url_img': item['url_img']?.toString() ?? '',
             'name': producer['name']?.toString() ?? '',
             'genre_name': genre['genre_name']?.toString() ?? '',

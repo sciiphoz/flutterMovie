@@ -37,7 +37,7 @@ class _RegPageState extends State<RegPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset('images/icon.png'),
+              // Image.asset('images/icon.png'),
               Text(
                 "Регистрация",
                 textScaler: TextScaler.linear(3),

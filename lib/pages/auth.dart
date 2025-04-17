@@ -33,7 +33,7 @@ class _AuthPageState extends State<AuthPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset('images/icon.png'),
+              // Image.asset('images/icon.png'),
               Text(
                 "Вход",
                 textScaler: TextScaler.linear(3),

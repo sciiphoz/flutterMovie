@@ -36,7 +36,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> getMovie() async {
     try {
-      final response = await _supabase.from('films').select('id, name_film, url_film, url_img, producer(name), genre(genre_name), place, year, age_rating, desc');
+      final response = await _supabase.from('films').select('id, name_film, url_img, producer(name), genre(genre_name), place, year, age_rating');
 
       setState(() {
         movie = response.map((item) {
@@ -46,22 +46,18 @@ class _HomePageState extends State<HomePage> {
           return {
             'id': item['id']?.toString() ?? '',
             'name_film': item['name_film']?.toString() ?? '',
-            'url_film': item['url_film']?.toString() ?? '',
             'url_img': item['url_img']?.toString() ?? '',
             'name': producer['name']?.toString() ?? '',
             'genre_name': genre['genre_name']?.toString() ?? '',
             'place': item['place']?.toString() ?? '',
             'year': item['year']?.toString() ?? '',
             'age_rating': item['age_rating']?.toString() ?? '',
-            'desc': item['desc']?.toString() ?? '',
           };
         }).toList();
       });
     }
     catch (e) { print(e); }
   } 
-
-
 
   List<Map<String, dynamic>> get filteredMovies => movie
     .where((movie) =>
@@ -96,7 +92,7 @@ class _HomePageState extends State<HomePage> {
                   decoration: InputDecoration(
                     filled: true,
                     prefixIcon: Icon(Icons.search, color: Colors.blueGrey[600]),
-                    labelText: 'Поиск по названию или исполнителю',
+                    labelText: 'Поиск по названию или продюсеру',
                     labelStyle: TextStyle(color: Colors.blueGrey[600]),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(6),
@@ -119,7 +115,7 @@ class _HomePageState extends State<HomePage> {
               SizedBox(
                 width: MediaQuery.of(context).size.width * 0.8,
                 child: Text(
-                  "Треки",
+                  "Фильмы",
                   style: TextStyle(fontSize: 42),
                 ),
               ),
@@ -137,17 +133,16 @@ class _HomePageState extends State<HomePage> {
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 8.0),
                           child: Wrap(
-                            spacing: 15,
-                            runSpacing: 15,
+                            direction: Axis.vertical,
                             children: filteredMovies.map((movie) {
                               return SizedBox(
-                                width: (MediaQuery.of(context).size.width - 50) / 2, // 2 колонки
+                                width: MediaQuery.of(context).size.width * 0.8,
                                 child: Column(
                                   children: [
-                                    Column(
+                                    Row(
                                       children: [
                                         ClipRRect(
-                                          borderRadius: BorderRadius.circular(20),
+                                          borderRadius: BorderRadius.circular(16),
                                           child: Image.network(
                                             movie['image']!,
                                             height: MediaQuery.of(context).size.height * 0.3,
@@ -158,7 +153,7 @@ class _HomePageState extends State<HomePage> {
                                           width: MediaQuery.of(context).size.width * 0.15,
                                           alignment: Alignment.centerLeft,
                                           child: Text(
-                                            movie['name']!,
+                                            movie['name_film']!,
                                             style: TextStyle(fontSize: 24, color: Colors.white),
                                             overflow: TextOverflow.ellipsis,
                                           ),
@@ -167,7 +162,7 @@ class _HomePageState extends State<HomePage> {
                                           width: MediaQuery.of(context).size.width * 0.15,
                                           alignment: Alignment.centerLeft,
                                           child: Text(
-                                            movie['author']!,
+                                            movie['name']!,
                                             style: TextStyle(fontSize: 16, color: Colors.white),
                                             overflow: TextOverflow.ellipsis,
                                           ),
@@ -175,14 +170,13 @@ class _HomePageState extends State<HomePage> {
                                       ],
                                     ),
                                     Row(
-                                      
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         ElevatedButton(
                                           onPressed: () {
                                             Navigator.push(
                                               context,
-                                              CupertinoPageRoute(
+                                              MaterialPageRoute(
                                                 builder: (context) => MoviePage(
                                                   id: movie['id']!
                                                 )
@@ -195,12 +189,12 @@ class _HomePageState extends State<HomePage> {
                                           onPressed: () async {
                                             if (await _supabase.from('usertable')
                                                 .count()
-                                                .eq('user_id', currentUser)
-                                                .eq('track_id', movie['id'] as int) == 1) {
-                                              print('track est');
+                                                .eq('id_user', currentUser)
+                                                .eq('id_film', movie['id'] as int) == 1) {
+                                              print('film est');
                                               return;
                                             } else {
-                                              userRequests.addUserMovie(currentUser, movie['id']);
+                                              userRequests.addUserMovie(movie['id'], currentUser);
                                             }
                                           }, 
                                           icon: Icon(

@@ -58,7 +58,7 @@ class MovieApp extends StatelessWidget {
         '/registration': (context) => RegPage(),
         '/recovery': (context) => RecoveryPage(),
         '/home': (context) => HomePage(),
-        '/player': (context) => VideoPlayer(),
+        '/player': (context) => VideoPage(),
       },
     );
   }
