@@ -69,8 +69,24 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  assets:
-    - images/icon.png
+  # assets:
+  #   - images/icon.png
+  fonts:
+    - family: MontserratAlternates
+      fonts:
+        - asset: fonts/montserrat/MontserratAlternates-Medium.ttf 
+        - asset: fonts/montserrat/MontserratAlternates-SemiBold.ttf 
+        - asset: fonts/montserrat/MontserratAlternates-Bold.ttf 
+    - family: Bellota
+      fonts:
+        - asset: fonts/bellota/Bellota-Regular.ttf
+        - asset: fonts/bellota/Bellota-Bold.ttf        
+    - family: SofiaSansSemiCondensed
+      fonts: 
+        - asset: fonts/sofia/SofiaSansSemiCondensed-Medium.ttf
+        - asset: fonts/sofia/SofiaSansSemiCondensed-SemiBold.ttf
+        - asset: fonts/sofia/SofiaSansSemiCondensed-Bold.ttf
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

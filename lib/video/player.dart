@@ -1,29 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoPage extends StatefulWidget {
-  const VideoPage({super.key});
+  final String? id;
+  const VideoPage(
+    {
+      super.key,
+      this.id  
+    });
 
   @override
   State<VideoPage> createState() => _VideoPageState();
 }
 
 class _VideoPageState extends State<VideoPage> {
+  final _supabase = Supabase.instance.client;
+  
+  String? _id;
+  Map<String, dynamic> movie = {};
+
   late VideoPlayerController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(
-        'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'));
-    
+    _id = widget.id;
+  
+    getUrl();
+
+    _controller = VideoPlayerController.networkUrl(Uri.parse('https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'));
+    //_controller = VideoPlayerController.networkUrl(Uri.parse(movie['url'] as String));
     _controller.addListener(() {
       setState(() {});
     });
     _controller.setLooping(true);
     _controller.initialize().then((_) => setState(() {}));
     _controller.play();
+  }
+
+  Future<void> getUrl() async {
+    try {
+      final response = await _supabase.from('films').select('url_film').eq('id', _id as Object);
+
+      setState(() {
+        movie = response.map((item) {
+          return {
+            'url': item['url_film'].toString(),
+          };
+        }) as Map<String, dynamic>;
+      });
+    }
+    catch (e) { print(e); }
   }
 
   @override
@@ -72,28 +101,32 @@ class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        children: <Widget>[
-          Container(
-            padding: const EdgeInsets.only(top: 20.0),
-          ),
-          const Text('With assets mp4'),
-          Container(
-            padding: const EdgeInsets.all(20),
-            child: AspectRatio(
-              aspectRatio: _controller.value.aspectRatio,
-              child: Stack(
-                alignment: Alignment.bottomCenter,
-                children: <Widget>[
-                  VideoPlayer(_controller),
-                  _ControlsOverlay(controller: _controller),
-                  VideoProgressIndicator(_controller, allowScrubbing: true),
-                ],
+    return Material(
+      child: Scaffold(
+        body: SingleChildScrollView(
+          child: Column(
+            children: <Widget>[
+              Container(
+                padding: const EdgeInsets.only(top: 20.0),
               ),
-            ),
+              const Text('With assets mp4'),
+              Container(
+                padding: const EdgeInsets.all(20),
+                child: AspectRatio(
+                  aspectRatio: _controller.value.aspectRatio,
+                  child: Stack(
+                    alignment: Alignment.bottomCenter,
+                    children: <Widget>[
+                      VideoPlayer(_controller),
+                      _ControlsOverlay(controller: _controller),
+                      VideoProgressIndicator(_controller, allowScrubbing: true),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

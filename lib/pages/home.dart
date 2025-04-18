@@ -218,7 +218,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
           title: Text("Главная", style: TextStyle(color: Colors.white),),
         ),
         drawer: DrawerPage(),

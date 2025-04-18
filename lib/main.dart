@@ -25,7 +25,19 @@ class MovieApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: true,
       theme: ThemeData(
+        inputDecorationTheme: InputDecorationTheme(
+          labelStyle: TextStyle(color: Colors.white, fontFamily: "MontserratAlternates"),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: BorderSide(color: Colors.white)
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(0),
+            borderSide: BorderSide(color: Colors.white)
+          )
+        ),
         appBarTheme: AppBarTheme(
+          backgroundColor: Colors.transparent,
           iconTheme: IconThemeData(
             color: Colors.white
           )
@@ -37,18 +49,20 @@ class MovieApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.transparent,
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ButtonStyle(
+            textStyle: WidgetStatePropertyAll(TextStyle(fontFamily: "MontserratAlternates")),
             backgroundColor: WidgetStatePropertyAll(Colors.white),
-            foregroundColor: WidgetStatePropertyAll(Colors.blueGrey)
+            foregroundColor: WidgetStatePropertyAll(Colors.blueGrey),
           )
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: ButtonStyle(
+            textStyle: WidgetStatePropertyAll(TextStyle(fontFamily: "MontserratAlternates")),
             foregroundColor: WidgetStatePropertyAll(Colors.white),
             side: WidgetStatePropertyAll(BorderSide(color: Colors.white)),
           )
         ),
         textTheme: TextTheme(
-          bodyMedium: TextStyle(color: Colors.white)
+          bodyMedium: TextStyle(color: Colors.white, fontFamily: "MontserratAlternates")
         )
       ),
       initialRoute: '/',

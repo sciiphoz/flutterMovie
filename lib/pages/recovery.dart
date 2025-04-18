@@ -20,9 +20,7 @@ class RecoveryPage extends StatelessWidget {
         )
       ),
       child: Scaffold(
-        backgroundColor: Colors.transparent,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
           title: Text("Восстановление пароля", style: TextStyle(color: Colors.white,)),
           leading: IconButton(onPressed: (){
             Navigator.popAndPushNamed(context, '/');

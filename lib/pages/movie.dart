@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -23,6 +24,7 @@ class _MoviePageState extends State<MoviePage> {
   void initState() {
     super.initState();
     _id = widget.id;
+    getMovie();
   }
 
   Future<void> getMovie() async {
@@ -53,6 +55,34 @@ class _MoviePageState extends State<MoviePage> {
   
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.blue, Colors.blueGrey]
+        )
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Center(
+          child: Column(
+            children: [
+              Row(
+                
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.05,
+              ),
+              Row(
+
+              )
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

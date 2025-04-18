@@ -49,16 +49,7 @@ class _AuthPageState extends State<AuthPage> {
                       cursorColor: Colors.white,
                       decoration: InputDecoration(
                         prefixIcon: Icon(Icons.email, color: Colors.white),
-                        labelText: 'Email',
-                        labelStyle: TextStyle(color: Colors.white),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: BorderSide(color: Colors.white)
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: BorderSide(color: Colors.white)
-                        )
+                        labelText: 'Почта',
                       ),
                     ),
                     SizedBox(
@@ -71,15 +62,6 @@ class _AuthPageState extends State<AuthPage> {
                       decoration: InputDecoration(
                         prefixIcon: Icon(Icons.password, color: Colors.white),
                         labelText: 'Пароль',
-                        labelStyle: TextStyle(color: Colors.white),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: BorderSide(color: Colors.white)
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: BorderSide(color: Colors.white)
-                        )
                       ),
                     ),
                   ]

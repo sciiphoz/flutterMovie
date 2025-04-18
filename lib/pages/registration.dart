@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_guitar/database/auth.dart';
 import 'package:flutter_guitar/database/user_requests.dart';
+import 'package:flutter_guitar/video/player.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class RegPage extends StatefulWidget 
@@ -32,6 +33,18 @@ class _RegPageState extends State<RegPage> {
         )
       ),
       child: Scaffold(
+        appBar: AppBar(
+          actions: [
+            ElevatedButton(onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => VideoPage()
+                )
+              );
+            }, child: Text("s"))
+          ],
+        ),
         backgroundColor: Colors.transparent,        
         body: Center(
           child: Column(
@@ -52,16 +65,7 @@ class _RegPageState extends State<RegPage> {
                       controller: nameController,
                       cursorColor: Colors.white,
                       decoration: InputDecoration(
-                        labelText: 'Login',
-                        labelStyle: TextStyle(color: Colors.white),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: BorderSide(color: Colors.white)
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: BorderSide(color: Colors.white)
-                        )
+                        labelText: 'Имя',
                       ),
                     ),
                     SizedBox(
@@ -72,16 +76,7 @@ class _RegPageState extends State<RegPage> {
                       controller: emailController,
                       cursorColor: Colors.white,
                       decoration: InputDecoration(
-                        labelText: 'Email',
-                        labelStyle: TextStyle(color: Colors.white),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: BorderSide(color: Colors.white)
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: BorderSide(color: Colors.white)
-                        )
+                        labelText: 'Почта',
                       ),
                     ),
                     SizedBox(
@@ -94,15 +89,6 @@ class _RegPageState extends State<RegPage> {
                       decoration: InputDecoration(
                         prefixIcon: Icon(Icons.password, color: Colors.white),
                         labelText: 'Пароль',
-                        labelStyle: TextStyle(color: Colors.white),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: BorderSide(color: Colors.white)
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: BorderSide(color: Colors.white)
-                        )
                       ),
                     ),
                     SizedBox(
@@ -115,15 +101,6 @@ class _RegPageState extends State<RegPage> {
                       decoration: InputDecoration(
                         prefixIcon: Icon(Icons.password, color: Colors.white),
                         labelText: 'Подтвердите пароль',
-                        labelStyle: TextStyle(color: Colors.white),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: BorderSide(color: Colors.white)
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          borderSide: BorderSide(color: Colors.white)
-                        )
                       ),
                     ),
                   ],
