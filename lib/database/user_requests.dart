@@ -18,11 +18,11 @@ class UserRequests {
     }
   }
   
-  Future<void> addUserMovie(int id_film, String id_user) async {
+  Future<void> addUserMovie(int idFilm, String idUser) async {
     try {
       await _supabase.client.from('usertable').insert({
-        'id_film':id_film,
-        'id_user':id_user
+        'id_film':idFilm,
+        'id_user':idUser
       });
     } catch (e) {
       print(e);

@@ -125,14 +125,14 @@ class _RegPageState extends State<RegPage> {
                         final prefs = await SharedPreferences.getInstance();
                         await prefs.setBool("isLoggedIn", true);
       
-                        ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Welcome, ${user.email!}.', style: TextStyle(color: Colors.white),), 
+                        ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Добро пожаловать, ${user.email!}.', style: TextStyle(color: Colors.white),), 
                         backgroundColor: Colors.blueGrey[700],));
       
                         Navigator.popAndPushNamed(context, '/'); 
                       }
                     }
                     else { 
-                      ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Passwords do not match.', style: TextStyle(color: Colors.white),), 
+                      ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Пароли не совпадают.', style: TextStyle(color: Colors.white),), 
                       backgroundColor: Colors.blueGrey[700],)); 
                     }
                   }

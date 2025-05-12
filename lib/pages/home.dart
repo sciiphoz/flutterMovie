@@ -3,7 +3,6 @@ import 'package:flutter_guitar/database/auth.dart';
 import 'package:flutter_guitar/database/user_requests.dart';
 import 'package:flutter_guitar/pages/drawer.dart';
 import 'package:flutter_guitar/pages/movie.dart';
-import 'package:flutter_guitar/video/player.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -149,23 +148,27 @@ class _HomePageState extends State<HomePage> {
                                             width: MediaQuery.of(context).size.width * 0.6,
                                           ),
                                         ),
-                                        Container(
-                                          width: MediaQuery.of(context).size.width * 0.15,
-                                          alignment: Alignment.centerLeft,
-                                          child: Text(
-                                            movie['name_film']!,
-                                            style: TextStyle(fontSize: 24, color: Colors.white),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        Container(
-                                          width: MediaQuery.of(context).size.width * 0.15,
-                                          alignment: Alignment.centerLeft,
-                                          child: Text(
-                                            movie['name']!,
-                                            style: TextStyle(fontSize: 16, color: Colors.white),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
+                                        Column(
+                                          children: [
+                                            Container(
+                                              width: MediaQuery.of(context).size.width * 0.15,
+                                              alignment: Alignment.centerLeft,
+                                              child: Text(
+                                                movie['name_film']!,
+                                                style: TextStyle(fontSize: 24, color: Colors.white),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            Container(
+                                              width: MediaQuery.of(context).size.width * 0.15,
+                                              alignment: Alignment.centerLeft,
+                                              child: Text(
+                                                movie['name']!,
+                                                style: TextStyle(fontSize: 16, color: Colors.white),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
@@ -183,7 +186,7 @@ class _HomePageState extends State<HomePage> {
                                               )
                                             );
                                           }, 
-                                          child: Text("Прослушать")
+                                          child: Text("Смотреть")
                                         ),
                                         IconButton(
                                           onPressed: () async {

@@ -24,7 +24,8 @@ class _AuthPageState extends State<AuthPage> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Colors.blue, Colors.blueGrey]
+          colors: [Color.fromARGB(255, 32, 32, 32), 
+          Color.fromARGB(255, 64, 64, 64), ]
         )
       ),
       child: Scaffold(
@@ -38,6 +39,9 @@ class _AuthPageState extends State<AuthPage> {
                 "Вход",
                 textScaler: TextScaler.linear(3),
                 style: TextStyle(color: Colors.white),
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.05,
               ),
               SizedBox(
                 width: MediaQuery.of(context).size.width * 0.8,
@@ -85,7 +89,7 @@ class _AuthPageState extends State<AuthPage> {
                 width: MediaQuery.of(context).size.width * 0.5,
                 child: ElevatedButton(onPressed: () async { 
                   if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-                    ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('All field must be filled.', style: TextStyle(color: Colors.white),), 
+                    ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Все поля должны быть заполнены.', style: TextStyle(color: Colors.white),), 
                     backgroundColor: Colors.blueGrey[700],));
                   } else {
                     var user = await authService.signIn(emailController.text, passwordController.text);
@@ -94,13 +98,13 @@ class _AuthPageState extends State<AuthPage> {
                       final prefs = await SharedPreferences.getInstance();
                       await prefs.setBool("isLoggedIn", true);
       
-                      ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Welcome, ${user.email!}.', style: TextStyle(color: Colors.white),), 
+                      ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Добро пожаловать, ${user.email!}.', style: TextStyle(color: Colors.white),), 
                       backgroundColor: Colors.blueGrey[700],));
       
                       Navigator.popAndPushNamed(context, '/'); 
                       print('asd');
                     } else {
-                      ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Authentification failed.', style: TextStyle(color: Colors.white),), 
+                      ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Ошибка авторизации.', style: TextStyle(color: Colors.white),), 
 
                       backgroundColor: Colors.blueGrey[700],));
                     } 
