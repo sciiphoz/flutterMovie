@@ -16,18 +16,21 @@ class _DrawerPageState extends State<DrawerPage> {
   final String user_id = Supabase.instance.client.auth.currentUser!.id.toString();
   dynamic docs;
 
-  getUserById() async {
-    final userGet = await Supabase.instance.client.from('users').select().eq('id', user_id).single();
-
-    setState(() {
-      docs = userGet;
-    });
-  }
-
   @override
   void initState() {
     getUserById();
     super.initState();
+  }
+
+  Future<void> getUserById() async {
+    try {
+      final userGet = await Supabase.instance.client.from('users').select('username, email').eq('id', user_id);
+
+      setState(() {
+        docs = userGet;
+      });
+    }
+    catch (e) { print(e); }
   }
 
   @override
@@ -40,7 +43,8 @@ class _DrawerPageState extends State<DrawerPage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.blue, Colors.blueGrey]
+          colors: [Color.fromARGB(255, 45, 5, 5), 
+          Color.fromARGB(255, 15, 15, 60), ]
           )
         ),
         child: ListView(
@@ -50,14 +54,14 @@ class _DrawerPageState extends State<DrawerPage> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20)
                 ),
-                accountName: Text(docs['name']), 
+                accountName: Text(docs['username']), 
                 accountEmail: Text(docs['email']),
                 currentAccountPicture: Container(
                   alignment: Alignment.topCenter,
                   child: CircleAvatar(
                     maxRadius: 20,
                     minRadius: 10,
-                    backgroundImage: NetworkImage(docs['avatar']),
+                    // backgroundImage: NetworkImage(docs['avatar']),
                   ),
                 ),
                 otherAccountsPictures: [
@@ -76,17 +80,8 @@ class _DrawerPageState extends State<DrawerPage> {
               onTap: () {
                 Navigator.popAndPushNamed(context, '/tracks');
               },
-              title: Text("Моя музыка"),
+              title: Text("Моя "),
               leading: Icon(Icons.music_note),
-            ),
-            ListTile(
-              iconColor: Colors.white,
-              textColor: Colors.white,
-              onTap: (){
-                Navigator.popAndPushNamed(context, '/playlists');
-              },
-              title: Text("Мои плейлисты"),
-              leading: Icon(Icons.featured_play_list),
             ),
           ],
         ),

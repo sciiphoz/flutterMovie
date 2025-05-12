@@ -29,7 +29,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    
     getMovie();
   }
 
@@ -71,9 +70,10 @@ class _HomePageState extends State<HomePage> {
       height: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.blue, Colors.blueGrey]
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color.fromARGB(255, 45, 20, 20), 
+          Color.fromARGB(255, 35, 35, 60), ]
         )
       ),
       child: Scaffold(
@@ -143,7 +143,7 @@ class _HomePageState extends State<HomePage> {
                                         ClipRRect(
                                           borderRadius: BorderRadius.circular(16),
                                           child: Image.network(
-                                            movie['image']!,
+                                            movie['url_img']!,
                                             height: MediaQuery.of(context).size.height * 0.3,
                                             width: MediaQuery.of(context).size.width * 0.6,
                                           ),
@@ -201,7 +201,7 @@ class _HomePageState extends State<HomePage> {
                                             }
                                           }, 
                                           icon: Icon(
-                                            movie['isLiked'] ? CupertinoIcons.heart_fill : CupertinoIcons.heart, color: Colors.white
+                                            CupertinoIcons.heart, color: Colors.white
                                           )
                                         ),
                                       ],

@@ -22,10 +22,10 @@ class _AuthPageState extends State<AuthPage> {
       height: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color.fromARGB(255, 32, 32, 32), 
-          Color.fromARGB(255, 64, 64, 64), ]
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color.fromARGB(255, 45, 20, 20), 
+          Color.fromARGB(255, 35, 35, 60), ]
         )
       ),
       child: Scaffold(

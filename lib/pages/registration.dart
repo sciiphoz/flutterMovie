@@ -27,9 +27,10 @@ class _RegPageState extends State<RegPage> {
       height: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.blue, Colors.blueGrey]
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color.fromARGB(255, 45, 20, 20), 
+          Color.fromARGB(255, 35, 35, 60), ]
         )
       ),
       child: Scaffold(
