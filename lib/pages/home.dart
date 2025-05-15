@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_guitar/database/auth.dart';
 import 'package:flutter_guitar/database/user_requests.dart';
 import 'package:flutter_guitar/pages/drawer.dart';
-import 'package:flutter_guitar/pages/movie.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_guitar/video/player.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HomePage extends StatefulWidget {
@@ -89,18 +89,9 @@ class _HomePageState extends State<HomePage> {
                   style: TextStyle(color: Colors.blueGrey[600]),
                   cursorColor: Colors.white,
                   decoration: InputDecoration(
-                    filled: true,
-                    prefixIcon: Icon(Icons.search, color: Colors.blueGrey[600]),
+                    prefixIcon: Icon(Icons.search, color: Colors.white),
                     labelText: 'Поиск по названию или продюсеру',
-                    labelStyle: TextStyle(color: Colors.blueGrey[600]),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(6),
-                      borderSide: BorderSide(color: Colors.white)
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(6),
-                      borderSide: BorderSide(color: Colors.white)
-                    )
+                    labelStyle: TextStyle(color: Colors.white),
                   ),
                   onChanged: (value) {
                     setState(() {
@@ -138,74 +129,80 @@ class _HomePageState extends State<HomePage> {
                                 width: MediaQuery.of(context).size.width * 0.8,
                                 child: Column(
                                   children: [
-                                    Row(
-                                      children: [
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(16),
-                                          child: Image.network(
-                                            movie['url_img']!,
-                                            height: MediaQuery.of(context).size.height * 0.3,
-                                            width: MediaQuery.of(context).size.width * 0.6,
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.01),
+                                        borderRadius: BorderRadius.circular(13)
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(16),
+                                            child: Image.network(
+                                              movie['url_img']!,
+                                              height: MediaQuery.of(context).size.height * 0.3,
+                                            ),
                                           ),
-                                        ),
-                                        Column(
-                                          children: [
-                                            Container(
-                                              width: MediaQuery.of(context).size.width * 0.15,
-                                              alignment: Alignment.centerLeft,
-                                              child: Text(
-                                                movie['name_film']!,
-                                                style: TextStyle(fontSize: 24, color: Colors.white),
-                                                overflow: TextOverflow.ellipsis,
+                                          Column(
+                                            children: [
+                                              Container(
+                                                width: MediaQuery.of(context).size.width * 0.15,
+                                                alignment: Alignment.centerLeft,
+                                                child: Text(
+                                                  movie['name_film']!,
+                                                  style: TextStyle(fontSize: 24, color: Colors.white),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
                                               ),
-                                            ),
-                                            Container(
-                                              width: MediaQuery.of(context).size.width * 0.15,
-                                              alignment: Alignment.centerLeft,
-                                              child: Text(
-                                                movie['name']!,
-                                                style: TextStyle(fontSize: 16, color: Colors.white),
-                                                overflow: TextOverflow.ellipsis,
+                                              Container(
+                                                width: MediaQuery.of(context).size.width * 0.15,
+                                                alignment: Alignment.centerLeft,
+                                                child: Text(
+                                                  movie['name']!,
+                                                  style: TextStyle(fontSize: 16, color: Colors.white),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) => MoviePage(
-                                                  id: movie['id']!
+                                            ],
+                                          ),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              ElevatedButton(
+                                                onPressed: () {
+                                                  // Navigator.push(
+                                                  //   context,
+                                                  //   MaterialPageRoute(
+                                                  //     builder: (context) => MoviePage(
+                                                  //       id: movie['id']!
+                                                  //     )
+                                                  //   )
+                                                  // );
+                                                  Navigator.push(context, MaterialPageRoute(builder: (context) => VideoPage()));
+                                                }, 
+                                                child: Text("Смотреть")
+                                              ),
+                                              IconButton(
+                                                onPressed: () async {
+                                                  if (await _supabase.from('usertable')
+                                                      .count()
+                                                      .eq('id_user', currentUser)
+                                                      .eq('id_film', movie['id'] as int) == 1) {
+                                                    print('film est');
+                                                    return;
+                                                  } else {
+                                                    userRequests.addUserMovie(movie['id'], currentUser);
+                                                  }
+                                                }, 
+                                                icon: Icon(
+                                                  CupertinoIcons.heart, color: Colors.white
                                                 )
-                                              )
-                                            );
-                                          }, 
-                                          child: Text("Смотреть")
-                                        ),
-                                        IconButton(
-                                          onPressed: () async {
-                                            if (await _supabase.from('usertable')
-                                                .count()
-                                                .eq('id_user', currentUser)
-                                                .eq('id_film', movie['id'] as int) == 1) {
-                                              print('film est');
-                                              return;
-                                            } else {
-                                              userRequests.addUserMovie(movie['id'], currentUser);
-                                            }
-                                          }, 
-                                          icon: Icon(
-                                            CupertinoIcons.heart, color: Colors.white
+                                              ),
+                                            ],
                                           )
-                                        ),
-                                      ],
-                                    )
+                                        ],
+                                      ),
+                                    ),
                                   ],
                                 ),
                               );

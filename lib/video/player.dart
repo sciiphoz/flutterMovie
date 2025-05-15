@@ -82,7 +82,7 @@ class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse('https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'));
+    _controller = VideoPlayerController.networkUrl(Uri.parse('https://www.dropbox.com/scl/fi/0de4a8bj3gedn4j3es3pb/animevost_1-seriya-Naruto-480p.mp4?rlkey=ob1b5osiuo83vizd7ujsnib9h&st=0w6s09xh&raw=1'));
 
     _controller.addListener(() {
       setState(() {});

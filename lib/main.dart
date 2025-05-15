@@ -23,7 +23,7 @@ class MovieApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: true,
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         inputDecorationTheme: InputDecorationTheme(
           labelStyle: TextStyle(color: Colors.white, fontFamily: "MontserratAlternates"),
@@ -32,8 +32,8 @@ class MovieApp extends StatelessWidget {
             borderSide: BorderSide(color: Colors.white)
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(0),
-            borderSide: BorderSide(color: Colors.white)
+            borderSide: BorderSide(color: Colors.white),
+            borderRadius: BorderRadius.circular(0)
           )
         ),
         appBarTheme: AppBarTheme(
