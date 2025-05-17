@@ -34,18 +34,6 @@ class _RegPageState extends State<RegPage> {
         )
       ),
       child: Scaffold(
-        appBar: AppBar(
-          actions: [
-            ElevatedButton(onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => VideoPage()
-                )
-              );
-            }, child: Text("s"))
-          ],
-        ),
         backgroundColor: Colors.transparent,        
         body: Center(
           child: Column(
@@ -56,6 +44,9 @@ class _RegPageState extends State<RegPage> {
                 "Регистрация",
                 textScaler: TextScaler.linear(3),
                 style: TextStyle(color: Colors.white),
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.05,
               ),
               SizedBox(
                 width: MediaQuery.of(context).size.width * 0.8,
@@ -108,10 +99,11 @@ class _RegPageState extends State<RegPage> {
                 ),
               ),
               SizedBox(
-                height: MediaQuery.of(context).size.height * 0.02,
+                height: MediaQuery.of(context).size.height * 0.05,
               ),
               SizedBox(
-                width: MediaQuery.of(context).size.width * 0.5,
+                width: MediaQuery.of(context).size.width * 0.4,
+                height: MediaQuery.of(context).size.height * 0.045,
                 child: ElevatedButton(onPressed: () async {
                   if (emailController.text.isEmpty || passwordController.text.isEmpty || repeatController.text.isEmpty || nameController.text.isEmpty) {
                     ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('All field must be filled.', style: TextStyle(color: Colors.white),), 
@@ -138,16 +130,17 @@ class _RegPageState extends State<RegPage> {
                     }
                   }
                 }, 
-                child: Text("Создать аккаунт"),), 
+                child: Text("Создать аккаунт", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),),), 
               ),
               SizedBox(
                 height: MediaQuery.of(context).size.height * 0.02,
               ),
               SizedBox(
-                width: MediaQuery.of(context).size.width * 0.5,
+                width: MediaQuery.of(context).size.width * 0.4,
+                height: MediaQuery.of(context).size.height * 0.045,
                 child: OutlinedButton(onPressed: (){
                   Navigator.popAndPushNamed(context, '/');
-                }, child: Text("Войти")),
+                }, child: Text("Войти", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),)),
               )
             ],
           ),

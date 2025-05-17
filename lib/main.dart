@@ -23,6 +23,7 @@ class MovieApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'Movies',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         inputDecorationTheme: InputDecorationTheme(
@@ -49,13 +50,15 @@ class MovieApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.transparent,
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ButtonStyle(
+            shape: WidgetStatePropertyAll(LinearBorder()),
             textStyle: WidgetStatePropertyAll(TextStyle(fontFamily: "MontserratAlternates")),
             backgroundColor: WidgetStatePropertyAll(Colors.white),
-            foregroundColor: WidgetStatePropertyAll(Colors.blueGrey),
+            foregroundColor: WidgetStatePropertyAll(Color.fromARGB(255, 30, 10, 10)),
           )
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: ButtonStyle(
+            shape: WidgetStatePropertyAll(BeveledRectangleBorder()),
             textStyle: WidgetStatePropertyAll(TextStyle(fontFamily: "MontserratAlternates")),
             foregroundColor: WidgetStatePropertyAll(Colors.white),
             side: WidgetStatePropertyAll(BorderSide(color: Colors.white)),

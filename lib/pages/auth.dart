@@ -86,7 +86,8 @@ class _AuthPageState extends State<AuthPage> {
                 height: MediaQuery.of(context).size.height * 0.02,
               ),
               SizedBox(
-                width: MediaQuery.of(context).size.width * 0.5,
+                width: MediaQuery.of(context).size.width * 0.4,
+                height: MediaQuery.of(context).size.height * 0.045,
                 child: ElevatedButton(onPressed: () async { 
                   if (emailController.text.isEmpty || passwordController.text.isEmpty) {
                     ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Все поля должны быть заполнены.', style: TextStyle(color: Colors.white),), 
@@ -109,16 +110,17 @@ class _AuthPageState extends State<AuthPage> {
                       backgroundColor: Colors.blueGrey[700],));
                     } 
                   }
-                }, child: Text("Войти"),), 
+                }, child: Text("Войти", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),),), 
               ),
               SizedBox(
                 height: MediaQuery.of(context).size.height * 0.02,
               ),
               SizedBox(
-                width: MediaQuery.of(context).size.width * 0.5,
-                child: OutlinedButton(onPressed: (){
+                width: MediaQuery.of(context).size.width * 0.4,
+                height: MediaQuery.of(context).size.height * 0.045,
+                child: OutlinedButton(onPressed: () {
                   Navigator.popAndPushNamed(context, '/registration');
-                }, child: Text("Зарегистрироваться")),
+                }, child: Text("Зарегистрироваться", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),)),
               )
             ],
           ),
