@@ -31,7 +31,7 @@ class _DrawerPageState extends State<DrawerPage> {
           .select('username, email')
           .eq('id', user_id);
 
-      if (response != null && response.isNotEmpty) {
+      if (response.isNotEmpty) {
         setState(() {
           userData = response[0]; // Получаем первый элемент списка
           isLoading = false;

@@ -3,6 +3,7 @@ import 'package:flutter_guitar/database/auth.dart';
 import 'package:flutter_guitar/database/user_requests.dart';
 import 'package:flutter_guitar/pages/drawer.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_guitar/pages/movie.dart';
 import 'package:flutter_guitar/video/player.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -17,6 +18,7 @@ class _HomePageState extends State<HomePage> {
   final _supabase = Supabase.instance.client;
   final TextEditingController _searchController = TextEditingController();
   final String currentUser = Supabase.instance.client.auth.currentUser!.id.toString();  
+  bool _isHovered = false;
   
   AuthService authService = AuthService();
   UserRequests userRequests = UserRequests();
@@ -127,83 +129,88 @@ class _HomePageState extends State<HomePage> {
                             children: filteredMovies.map((movie) {
                               return SizedBox(
                                 width: MediaQuery.of(context).size.width * 0.8,
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.01),
-                                        borderRadius: BorderRadius.circular(13)
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          ClipRRect(
-                                            borderRadius: BorderRadius.circular(16),
-                                            child: Image.network(
-                                              movie['url_img']!,
-                                              height: MediaQuery.of(context).size.height * 0.3,
+                                child: MouseRegion(
+                                  onEnter: (_) => setState(() => _isHovered = true),
+                                  onExit: (_) => setState(() => _isHovered = false),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => MoviePage(id: movie['id']!)
+                                        )
+                                      );
+                                    },
+                                    child: Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(16),
+                                          child: Image.network(
+                                            movie['url_img']!,
+                                            height: MediaQuery.of(context).size.height * 0.3,
+                                            width: double.infinity,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                        if (_isHovered)
+                                          AnimatedOpacity(
+                                            opacity: _isHovered ? 1.0 : 0.0,
+                                            duration: const Duration(milliseconds: 300),
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                color: Colors.black.withOpacity(0.7),
+                                                borderRadius: BorderRadius.circular(16),
+                                              ),
+                                              padding: const EdgeInsets.all(8),
+                                              child: Column(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    movie['name_film']!,
+                                                    style: const TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 20,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                    maxLines: 2,
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  Text(
+                                                    movie['year']!,
+                                                    style: const TextStyle(
+                                                      color: Colors.white70,
+                                                      fontSize: 16,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 12),
+                                                  IconButton(
+                                                    onPressed: () async {
+                                                      if (await _supabase
+                                                          .from('usertable')
+                                                          .count()
+                                                          .eq('id_user', currentUser)
+                                                          .eq('id_film', movie['id'] as int) == 1) {
+                                                        print('film est');
+                                                        return;
+                                                      } else {
+                                                        userRequests.addUserMovie(movie['id'], currentUser);
+                                                      }
+                                                    },
+                                                    icon: Icon(
+                                                      CupertinoIcons.heart,
+                                                      color: Colors.white,
+                                                      size: 28,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ),
-                                          Column(
-                                            children: [
-                                              Container(
-                                                width: MediaQuery.of(context).size.width * 0.15,
-                                                alignment: Alignment.centerLeft,
-                                                child: Text(
-                                                  movie['name_film']!,
-                                                  style: TextStyle(fontSize: 24, color: Colors.white),
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                              Container(
-                                                width: MediaQuery.of(context).size.width * 0.15,
-                                                alignment: Alignment.centerLeft,
-                                                child: Text(
-                                                  movie['name']!,
-                                                  style: TextStyle(fontSize: 16, color: Colors.white),
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              ElevatedButton(
-                                                onPressed: () {
-                                                  // Navigator.push(
-                                                  //   context,
-                                                  //   MaterialPageRoute(
-                                                  //     builder: (context) => MoviePage(
-                                                  //       id: movie['id']!
-                                                  //     )
-                                                  //   )
-                                                  // );
-                                                  Navigator.push(context, MaterialPageRoute(builder: (context) => VideoPage()));
-                                                }, 
-                                                child: Text("Смотреть")
-                                              ),
-                                              IconButton(
-                                                onPressed: () async {
-                                                  if (await _supabase.from('usertable')
-                                                      .count()
-                                                      .eq('id_user', currentUser)
-                                                      .eq('id_film', movie['id'] as int) == 1) {
-                                                    print('film est');
-                                                    return;
-                                                  } else {
-                                                    userRequests.addUserMovie(movie['id'], currentUser);
-                                                  }
-                                                }, 
-                                                icon: Icon(
-                                                  CupertinoIcons.heart, color: Colors.white
-                                                )
-                                              ),
-                                            ],
-                                          )
-                                        ],
-                                      ),
+                                      ],
                                     ),
-                                  ],
+                                  ),
                                 ),
                               );
                             }).toList(),

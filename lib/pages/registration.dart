@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_guitar/database/auth.dart';
 import 'package:flutter_guitar/database/user_requests.dart';
-import 'package:flutter_guitar/video/player.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class RegPage extends StatefulWidget 
