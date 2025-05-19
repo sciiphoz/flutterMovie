@@ -85,8 +85,7 @@ class _DrawerPageState extends State<DrawerPage> {
                       IconButton(
                         onPressed: () async {
                           await authService.logOut();
-                          final prefs =
-                              await SharedPreferences.getInstance();
+                          final prefs = await SharedPreferences.getInstance();
                           await prefs.setBool('isLoggedIn', false);
                           Navigator.popAndPushNamed(context, '/auth');
                         },
@@ -99,7 +98,7 @@ class _DrawerPageState extends State<DrawerPage> {
                   iconColor: Colors.white,
                   textColor: Colors.white,
                   onTap: () {
-                    Navigator.popAndPushNamed(context, '/tracks');
+                    Navigator.popAndPushNamed(context, '/myfilms');
                   },
                   title: Text("Моя фильмотека"),
                   leading: Icon(Icons.music_note),

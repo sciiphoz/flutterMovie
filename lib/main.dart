@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_guitar/pages/films.dart';
 import 'package:flutter_guitar/pages/home.dart';
 import 'package:flutter_guitar/pages/landing.dart';
 import 'package:flutter_guitar/video/player.dart';
@@ -76,6 +77,7 @@ class MovieApp extends StatelessWidget {
         '/recovery': (context) => RecoveryPage(),
         '/home': (context) => HomePage(),
         '/player': (context) => VideoPage(),
+        '/myfilms': (context) => MyFilmsPage(),
       },
     );
   }

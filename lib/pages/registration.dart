@@ -101,8 +101,8 @@ class _RegPageState extends State<RegPage> {
                 height: MediaQuery.of(context).size.height * 0.05,
               ),
               SizedBox(
-                width: MediaQuery.of(context).size.width * 0.4,
-                height: MediaQuery.of(context).size.height * 0.045,
+                width: MediaQuery.of(context).size.width * 0.5,
+                height: MediaQuery.of(context).size.height * 0.055,
                 child: ElevatedButton(onPressed: () async {
                   if (emailController.text.isEmpty || passwordController.text.isEmpty || repeatController.text.isEmpty || nameController.text.isEmpty) {
                     ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('All field must be filled.', style: TextStyle(color: Colors.white),), 
@@ -135,8 +135,8 @@ class _RegPageState extends State<RegPage> {
                 height: MediaQuery.of(context).size.height * 0.02,
               ),
               SizedBox(
-                width: MediaQuery.of(context).size.width * 0.4,
-                height: MediaQuery.of(context).size.height * 0.045,
+                width: MediaQuery.of(context).size.width * 0.5,
+                height: MediaQuery.of(context).size.height * 0.055,
                 child: OutlinedButton(onPressed: (){
                   Navigator.popAndPushNamed(context, '/');
                 }, child: Text("Войти", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),)),
