@@ -91,7 +91,7 @@ class _AuthPageState extends State<AuthPage> {
                 child: ElevatedButton(onPressed: () async { 
                   if (emailController.text.isEmpty || passwordController.text.isEmpty) {
                     ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Все поля должны быть заполнены.', style: TextStyle(color: Colors.white),), 
-                    backgroundColor: Colors.blueGrey[700],));
+                    backgroundColor: Color.fromARGB(255, 45, 5, 5),));
                   } else {
                     var user = await authService.signIn(emailController.text, passwordController.text);
       
@@ -100,17 +100,16 @@ class _AuthPageState extends State<AuthPage> {
                       await prefs.setBool("isLoggedIn", true);
       
                       ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Добро пожаловать, ${user.email!}.', style: TextStyle(color: Colors.white),), 
-                      backgroundColor: Colors.blueGrey[700],));
+                      backgroundColor: Color.fromARGB(255, 45, 5, 5),));
       
                       Navigator.popAndPushNamed(context, '/'); 
-                      print('asd');
                     } else {
                       ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Ошибка авторизации.', style: TextStyle(color: Colors.white),), 
 
-                      backgroundColor: Colors.blueGrey[700],));
+                      backgroundColor: Color.fromARGB(255, 45, 5, 5),));
                     } 
                   }
-                }, child: Text("Войти", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),),), 
+                }, child: Text("Войти", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),),), 
               ),
               SizedBox(
                 height: MediaQuery.of(context).size.height * 0.02,
@@ -120,7 +119,7 @@ class _AuthPageState extends State<AuthPage> {
                 height: MediaQuery.of(context).size.height * 0.055,
                 child: OutlinedButton(onPressed: () {
                   Navigator.popAndPushNamed(context, '/registration');
-                }, child: Text("Зарегистрироваться", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),)),
+                }, child: Text("Зарегистрироваться", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),)),
               )
             ],
           ),

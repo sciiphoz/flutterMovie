@@ -45,14 +45,14 @@ class RecoveryPage extends StatelessWidget {
                     suffixIcon: IconButton(
                       onPressed: () async {
                         if (emailController.text.isEmpty) {
-                          ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Email field is empty.', style: TextStyle(color: Colors.white),), 
-                          backgroundColor: Colors.blueGrey[700],));
+                          ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Поле почты должно быть заполнено.', style: TextStyle(color: Colors.white),), 
+                          backgroundColor: Color.fromARGB(255, 30, 4, 40),));
                         } else {
                           await authService.recoveryPassword(emailController.text);
                           emailController.clear();
       
-                          ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Message sent to $emailController.', style: TextStyle(color: Colors.white),), 
-                          backgroundColor: Colors.blueGrey[700],));
+                          ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Письмо с инструкциями отправлено на почту $emailController.', style: TextStyle(color: Colors.white),), 
+                          backgroundColor: Color.fromARGB(255, 30, 4, 40),));
                         }
                       },
                       icon: Icon(
@@ -63,20 +63,19 @@ class RecoveryPage extends StatelessWidget {
                     labelText: 'Email',
                     labelStyle: TextStyle(color: Colors.white),
                     focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: Colors.white)),
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: BorderSide(color: Colors.white)),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(0),
                       borderSide: BorderSide(color: Colors.white),
                     ),
                   ),
                 ),
               ),
               SizedBox(
-                height: MediaQuery.of(context).size.height * 0.02,
+                height: MediaQuery.of(context).size.height * 0.05,
               ),
-              Text("Для восстановления доступа к своему аккаунту, пожалуйста введите свлю почту ",
-              textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold),)
+              Text("Для восстановления доступа к своему аккаунту, пожалуйста введите свою почту.", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w500),)
             ],
           ),
         ),

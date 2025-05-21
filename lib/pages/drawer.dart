@@ -1,10 +1,17 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_guitar/database/auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DrawerPage extends StatefulWidget {
-  const DrawerPage({super.key});
+  final bool isHomePage;
+  const DrawerPage(
+    {
+      super.key,
+      this.isHomePage = true
+    }
+  );
 
   @override
   State<DrawerPage> createState() => _DrawerPageState();
@@ -15,12 +22,15 @@ class _DrawerPageState extends State<DrawerPage> {
 
   late final String user_id;
   dynamic userData;
+
   bool isLoading = true;
+  bool? _isHomePage;
 
   @override
   void initState() {
     user_id = Supabase.instance.client.auth.currentUser!.id;
     getUserById();
+    _isHomePage = widget.isHomePage;
     super.initState();
   }
 
@@ -33,7 +43,7 @@ class _DrawerPageState extends State<DrawerPage> {
 
       if (response.isNotEmpty) {
         setState(() {
-          userData = response[0]; // Получаем первый элемент списка
+          userData = response[0];
           isLoading = false;
         });
       }
@@ -62,49 +72,57 @@ class _DrawerPageState extends State<DrawerPage> {
             ],
           ),
         ),
-        child: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : ListView(
-              children: [
-                DrawerHeader(
-                  child: UserAccountsDrawerHeader(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    accountName: Text(userData['username'] ?? 'No username'),
-                    accountEmail: Text(userData['email'] ?? 'No email'),
-                    currentAccountPicture: Container(
-                      alignment: Alignment.topCenter,
-                      child: CircleAvatar(
-                        maxRadius: 20,
-                        minRadius: 10,
-                        // backgroundImage: NetworkImage(userData['avatar']),
-                      ),
-                    ),
-                    otherAccountsPictures: [
-                      IconButton(
-                        onPressed: () async {
-                          await authService.logOut();
-                          final prefs = await SharedPreferences.getInstance();
-                          await prefs.setBool('isLoggedIn', false);
-                          Navigator.popAndPushNamed(context, '/auth');
-                        },
-                        icon: Icon(Icons.logout, color: Colors.white),
-                      )
-                    ],
+        child: isLoading ? Center(child: CircularProgressIndicator()) : ListView(
+          children: [
+            DrawerHeader(
+              child: UserAccountsDrawerHeader(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                accountName: Text(userData['username'] ?? 'No username'),
+                accountEmail: Text(userData['email'] ?? 'No email'),
+                currentAccountPicture: Container(
+                  alignment: Alignment.topCenter,
+                  child: CircleAvatar(
+                    maxRadius: 20,
+                    minRadius: 10,
                   ),
                 ),
-                ListTile(
-                  iconColor: Colors.white,
-                  textColor: Colors.white,
-                  onTap: () {
-                    Navigator.popAndPushNamed(context, '/myfilms');
-                  },
-                  title: Text("Моя фильмотека"),
-                  leading: Icon(Icons.music_note),
-                ),
-              ],
+                otherAccountsPictures: [
+                  IconButton(
+                    onPressed: () async {
+                      await authService.logOut();
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool('isLoggedIn', false);
+                      Navigator.popAndPushNamed(context, '/auth');
+                    },
+                    icon: Icon(Icons.logout, color: Colors.white),
+                  )
+                ],
+              ),
             ),
+            _isHomePage! ?
+            ListTile(
+              iconColor: Colors.white,
+              textColor: Colors.white,
+              onTap: () {
+                Navigator.popAndPushNamed(context, '/myfilms');
+              },
+              title: Text("Моя фильмотека"),
+              leading: Icon(CupertinoIcons.film),
+            )
+            :
+            ListTile(
+              iconColor: Colors.white,
+              textColor: Colors.white,
+              onTap: () {
+                Navigator.popAndPushNamed(context, '/home');
+              },
+              title: Text("Главная"),
+              leading: Icon(Icons.home),
+            )
+          ],
+        ),
       ),
     );
   }

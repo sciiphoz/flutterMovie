@@ -36,27 +36,28 @@ class _MyFilmsPageState extends State<MyFilmsPage> {
 
   Future<void> getMovie() async {
     try {
-      final response = await _supabase.from('films').select('id, name_film, url_img, producer(name), genre(genre_name), place, year, age_rating');
+      final response = await _supabase.from('usertable').select('films(id, name_film, url_img, producer(name), genre(genre_name), place, year, age_rating), id_user').eq('id_user', currentUser);
 
       setState(() {
         movie = response.map((item) {
-          final producer = item['producer'] as Map<String, dynamic>;
-          final genre = item['genre'] as Map<String, dynamic>;
+          final film = item['films'] as Map<String, dynamic>? ?? {};
+          
+          final producer = (film['producer'] as Map<String, dynamic>? ?? {});
+          final genre = (film['genre'] as Map<String, dynamic>? ?? {});
 
           return {
-            'id': item['id'],
-            'name_film': item['name_film']?.toString() ?? '',
-            'url_img': item['url_img']?.toString() ?? '',
-            'name': producer['name']?.toString() ?? '',
-            'genre_name': genre['genre_name']?.toString() ?? '',
-            'place': item['place']?.toString() ?? '',
-            'year': item['year']?.toString() ?? '',
-            'age_rating': item['age_rating']?.toString() ?? '',
+            'id': film['id'] as int? ?? 0,
+            'name_film': film['name_film']?.toString() ?? 'Без названия',
+            'url_img': film['url_img']?.toString() ?? '',
+            'name': producer['name']?.toString() ?? 'Неизвестный продюсер',
+            'genre_name': genre['genre_name']?.toString() ?? 'Неизвестный жанр',
+            'place': film['place']?.toString() ?? 'Неизвестно',
+            'year': (film['year'] as int?)?.toString() ?? 'Год не указан',
+            'age_rating': film['age_rating']?.toString() ?? '0+',
           };
         }).toList();
       });
-    }
-    catch (e) { print(e); }
+    } catch (e) { print('Ошибка загрузки избранных фильмов: $e'); }
   } 
 
   List<Map<String, dynamic>> get filteredMovies => movie
@@ -227,7 +228,7 @@ class _MyFilmsPageState extends State<MyFilmsPage> {
         appBar: AppBar(
           title: Text("Мои фильмы", style: TextStyle(color: Colors.white),),
         ),
-        drawer: DrawerPage(),
+        drawer: DrawerPage(isHomePage: false,),
       ),
     );
   }

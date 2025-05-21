@@ -44,7 +44,7 @@ class _HomePageState extends State<HomePage> {
           final genre = item['genre'] as Map<String, dynamic>;
 
           return {
-            'id': item['id']?.toString() ?? '',
+            'id': item['id'] as int? ?? 0,
             'name_film': item['name_film']?.toString() ?? '',
             'url_img': item['url_img']?.toString() ?? '',
             'name': producer['name']?.toString() ?? '',
@@ -148,8 +148,7 @@ class _HomePageState extends State<HomePage> {
                                           borderRadius: BorderRadius.circular(16),
                                           child: Image.network(
                                             movie['url_img']!,
-                                            height: MediaQuery.of(context).size.height * 0.3,
-                                            width: double.infinity,
+                                            width: MediaQuery.of(context).size.width * 0.3,
                                             fit: BoxFit.cover,
                                           ),
                                         ),
@@ -159,7 +158,7 @@ class _HomePageState extends State<HomePage> {
                                             duration: const Duration(milliseconds: 300),
                                             child: Container(
                                               decoration: BoxDecoration(
-                                                color: Colors.black.withOpacity(0.7),
+                                                color: Colors.black.withValues(alpha: 0.7),
                                                 borderRadius: BorderRadius.circular(16),
                                               ),
                                               padding: const EdgeInsets.all(8),
@@ -187,11 +186,7 @@ class _HomePageState extends State<HomePage> {
                                                   const SizedBox(height: 12),
                                                   IconButton(
                                                     onPressed: () async {
-                                                      if (await _supabase
-                                                          .from('usertable')
-                                                          .count()
-                                                          .eq('id_user', currentUser)
-                                                          .eq('id_film', movie['id'] as int) == 1) {
+                                                      if (await _supabase.from('usertable').count().eq('id_user', currentUser).eq('id_film', movie['id'] as int) == 1) {
                                                         print('film est');
                                                         return;
                                                       } else {

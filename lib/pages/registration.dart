@@ -118,18 +118,18 @@ class _RegPageState extends State<RegPage> {
                         await prefs.setBool("isLoggedIn", true);
       
                         ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Добро пожаловать, ${user.email!}.', style: TextStyle(color: Colors.white),), 
-                        backgroundColor: Colors.blueGrey[700],));
+                        backgroundColor:Color.fromARGB(255, 30, 4, 40),));
       
                         Navigator.popAndPushNamed(context, '/'); 
                       }
                     }
                     else { 
                       ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Пароли не совпадают.', style: TextStyle(color: Colors.white),), 
-                      backgroundColor: Colors.blueGrey[700],)); 
+                      backgroundColor: Color.fromARGB(255, 30, 4, 40),)); 
                     }
                   }
                 }, 
-                child: Text("Создать аккаунт", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),),), 
+                child: Text("Создать аккаунт", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),),), 
               ),
               SizedBox(
                 height: MediaQuery.of(context).size.height * 0.02,
@@ -139,7 +139,7 @@ class _RegPageState extends State<RegPage> {
                 height: MediaQuery.of(context).size.height * 0.055,
                 child: OutlinedButton(onPressed: (){
                   Navigator.popAndPushNamed(context, '/');
-                }, child: Text("Войти", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),)),
+                }, child: Text("Войти", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),)),
               )
             ],
           ),
