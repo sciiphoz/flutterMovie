@@ -3,55 +3,55 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoPage extends StatefulWidget {
-  final String? id;
-  const VideoPage(
-    {
-      super.key,
-      this.id  
-    });
+  final int? id;
+  const VideoPage({super.key, required this.id});
 
   @override
   State<VideoPage> createState() => _VideoPageState();
 }
 
 class _VideoPageState extends State<VideoPage> {
-  final _supabase = Supabase.instance.client;
-  
-  String? _id;
-  Map<String, dynamic> movie = {};
-
+  final SupabaseClient _supabase = Supabase.instance.client;
   late VideoPlayerController _controller;
+  bool _isLoading = true;
+  bool _hasError = false;
+  Map<String, dynamic> _movie = {};
+  bool _isControlsVisible = true;
 
   @override
   void initState() {
     super.initState();
-    _id = widget.id;
-  
-    getUrl();
-
-    _controller = VideoPlayerController.networkUrl(Uri.parse('https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'));
-    //_controller = VideoPlayerController.networkUrl(Uri.parse(movie['url'] as String));
-    _controller.addListener(() {
-      setState(() {});
-    });
-    _controller.setLooping(true);
-    _controller.initialize().then((_) => setState(() {}));
-    _controller.play();
+    _initializeVideo();
   }
 
-  Future<void> getUrl() async {
+  Future<void> _initializeVideo() async {
     try {
-      final response = await _supabase.from('films').select('url_film').eq('id', _id as Object);
+      final response = await _supabase
+          .from('films')
+          .select('''url_film, name_film, year, age_rating, desc''')
+          .eq('id', widget.id as Object)
+          .single();
 
       setState(() {
-        movie = response.map((item) {
-          return {
-            'url': item['url_film'].toString(),
-          };
-        }) as Map<String, dynamic>;
+        _movie = response;
+        _isLoading = false;
       });
+
+      _controller = VideoPlayerController.networkUrl(Uri.parse(_movie['url_film']))
+        ..addListener(() => setState(() {}))
+        ..setLooping(false)
+        ..initialize().then((_) {
+          setState(() {});
+          _controller.play();
+        });
+
+    } catch (e) {
+      setState(() {
+        _hasError = true;
+        _isLoading = false;
+      });
+      print('Error loading video: $e');
     }
-    catch (e) { print(e); }
   }
 
   @override
@@ -60,189 +60,241 @@ class _VideoPageState extends State<VideoPage> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      alignment: FractionalOffset.bottomRight +
-          const FractionalOffset(-0.1, -0.1),
-      children: <Widget>[
-        _ButterFlyAssetVideo(),
-      ]);
-  }
-}
-
-class _ButterFlyAssetVideo extends StatefulWidget {
-  @override
-  _ButterFlyAssetVideoState createState() => _ButterFlyAssetVideoState();
-}
-
-class _ButterFlyAssetVideoState extends State<_ButterFlyAssetVideo> {
-  late VideoPlayerController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse('https://www.dropbox.com/scl/fi/0de4a8bj3gedn4j3es3pb/animevost_1-seriya-Naruto-480p.mp4?rlkey=ob1b5osiuo83vizd7ujsnib9h&st=0w6s09xh&raw=1'));
-
-    _controller.addListener(() {
-      setState(() {});
-    });
-    _controller.setLooping(true);
-    _controller.initialize().then((_) => setState(() {}));
-    _controller.play();
+  void _toggleControls() {
+    setState(() => _isControlsVisible = !_isControlsVisible);
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      child: Scaffold(
-        body: SingleChildScrollView(
-          child: Column(
-            children: <Widget>[
-              Container(
-                padding: const EdgeInsets.only(top: 20.0),
-              ),
-              const Text('With assets mp4'),
-              Container(
-                padding: const EdgeInsets.all(20),
-                child: AspectRatio(
-                  aspectRatio: _controller.value.aspectRatio,
-                  child: Stack(
-                    alignment: Alignment.bottomCenter,
-                    children: <Widget>[
-                      VideoPlayer(_controller),
-                      _ControlsOverlay(controller: _controller),
-                      VideoProgressIndicator(_controller, allowScrubbing: true),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+  Widget _buildVideoPlayer() {
+    return AspectRatio(
+      aspectRatio: _controller.value.aspectRatio,
+      child: GestureDetector(
+        onTap: _toggleControls,
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            VideoPlayer(_controller),
+            if (_isControlsVisible) _VideoControlsOverlay(controller: _controller),
+            if (_isControlsVisible) _TopAppBar(),
+          ],
         ),
       ),
     );
   }
+
+  Widget _buildMovieInfo() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _movie['name_film'] ?? 'Название не указано',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 24.0,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8.0),
+          Row(
+            children: [
+              Text(
+                '${_movie['year'] ?? ''}',
+                style: const TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(width: 16.0),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(4.0),
+                ),
+                child: Text(
+                  '${_movie['age_rating'] ?? '0'}+',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16.0),
+          Text(
+            _movie['desc'] ?? 'Описание отсутствует',
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 16.0,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 24.0),
+          _ActionButtonsRow(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_hasError) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Ошибка загрузки видео', style: TextStyle(color: Colors.white)),
+            const SizedBox(height: 16.0),
+            ElevatedButton(
+              onPressed: _initializeVideo,
+              child: const Text('Повторить попытку'),
+            ),
+          ],
+        ),
+      );
+    }
+    return CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          expandedHeight: MediaQuery.of(context).size.height * 0.4,
+          flexibleSpace: FlexibleSpaceBar(
+            background: _buildVideoPlayer(),
+          ),
+          pinned: true,
+        ),
+        SliverToBoxAdapter(child: _buildMovieInfo()),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: _buildBody(),
+    );
+  }
 }
 
-
-class _ControlsOverlay extends StatelessWidget {
-  const _ControlsOverlay({required this.controller});
-
-  static const List<Duration> _exampleCaptionOffsets = <Duration>[
-    Duration(seconds: -10),
-    Duration(seconds: -3),
-    Duration(seconds: -1, milliseconds: -500),
-    Duration(milliseconds: -250),
-    Duration.zero,
-    Duration(milliseconds: 250),
-    Duration(seconds: 1, milliseconds: 500),
-    Duration(seconds: 3),
-    Duration(seconds: 10),
-  ];
-  static const List<double> _examplePlaybackRates = <double>[
-    0.25,
-    0.5,
-    1.0,
-    1.5,
-    2.0,
-    3.0,
-    5.0,
-    10.0,
-  ];
-
+class _VideoControlsOverlay extends StatelessWidget {
   final VideoPlayerController controller;
+
+  const _VideoControlsOverlay({required this.controller});
 
   @override
   Widget build(BuildContext context) {
     return Stack(
-      children: <Widget>[
+      children: [
+        // Gradient overlay
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withOpacity(0.5),
+                  Colors.transparent,
+                  Colors.black.withOpacity(0.5),
+                ],
+              ),
+            ),
+          ),
+        ),
+        // Play/Pause controls
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 50),
-          reverseDuration: const Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: 200),
           child: controller.value.isPlaying
               ? const SizedBox.shrink()
-              : const ColoredBox(
-                  color: Colors.black26,
-                  child: Center(
-                    child: Icon(
-                      Icons.play_arrow,
-                      color: Colors.white,
-                      size: 100.0,
-                      semanticLabel: 'Play',
-                    ),
+              : const Center(
+                  child: Icon(
+                    Icons.play_circle_filled,
+                    color: Colors.white,
+                    size: 60.0,
                   ),
                 ),
         ),
-        GestureDetector(
-          onTap: () {
-            controller.value.isPlaying ? controller.pause() : controller.play();
-          },
-        ),
-        Align(
-          alignment: Alignment.topLeft,
-          child: PopupMenuButton<Duration>(
-            initialValue: controller.value.captionOffset,
-            tooltip: 'Caption Offset',
-            onSelected: (Duration delay) {
-              controller.setCaptionOffset(delay);
-            },
-            itemBuilder: (BuildContext context) {
-              return <PopupMenuItem<Duration>>[
-                for (final Duration offsetDuration in _exampleCaptionOffsets)
-                  PopupMenuItem<Duration>(
-                    value: offsetDuration,
-                    child: Text('${offsetDuration.inMilliseconds}ms'),
-                  )
-              ];
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                // Using less vertical padding as the text is also longer
-                // horizontally, so it feels like it would need more spacing
-                // horizontally (matching the aspect ratio of the video).
-                vertical: 12,
-                horizontal: 16,
-              ),
-              child: Text('${controller.value.captionOffset.inMilliseconds}ms'),
-            ),
+        // Progress bar
+        VideoProgressIndicator(
+          controller,
+          allowScrubbing: true,
+          colors: const VideoProgressColors(
+            playedColor: Colors.red,
+            bufferedColor: Colors.grey,
+            backgroundColor: Colors.grey,
           ),
         ),
-        Align(
-          alignment: Alignment.topRight,
+        // Playback speed
+        Positioned(
+          top: 16.0,
+          right: 16.0,
           child: PopupMenuButton<double>(
-            initialValue: controller.value.playbackSpeed,
-            tooltip: 'Playback speed',
-            onSelected: (double speed) {
-              controller.setPlaybackSpeed(speed);
-            },
-            itemBuilder: (BuildContext context) {
-              return <PopupMenuItem<double>>[
-                for (final double speed in _examplePlaybackRates)
-                  PopupMenuItem<double>(
-                    value: speed,
-                    child: Text('${speed}x'),
-                  )
-              ];
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                // Using less vertical padding as the text is also longer
-                // horizontally, so it feels like it would need more spacing
-                // horizontally (matching the aspect ratio of the video).
-                vertical: 12,
-                horizontal: 16,
-              ),
-              child: Text('${controller.value.playbackSpeed}x'),
-            ),
+            icon: const Icon(Icons.speed, color: Colors.white),
+            itemBuilder: (context) => [0.5, 1.0, 1.5, 2.0]
+                .map((speed) => PopupMenuItem(
+                      value: speed,
+                      child: Text('${speed}x'),
+                    ))
+                .toList(),
+            onSelected: (speed) => controller.setPlaybackSpeed(speed),
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _TopAppBar extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+            const Spacer(),
+            IconButton(
+              icon: const Icon(Icons.fullscreen, color: Colors.white),
+              onPressed: () => _toggleFullscreen(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _toggleFullscreen(BuildContext context) {
+    if (MediaQuery.of(context).orientation == Orientation.portrait) {
+      MediaQuery.of(context).orientation == Orientation.landscape;
+    } else {
+      MediaQuery.of(context).orientation == Orientation.portrait;
+    }
+  }
+}
+
+class _ActionButtonsRow extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _buildActionButton(Icons.add, 'В избранное'),
+        _buildActionButton(Icons.thumb_up, 'Лайк'),
+        _buildActionButton(Icons.share, 'Поделиться'),
+      ],
+    );
+  }
+
+  Widget _buildActionButton(IconData icon, String label) {
+    return Column(
+      children: [
+        IconButton(
+          icon: Icon(icon, color: Colors.white, size: 30.0),
+          onPressed: () {},
+        ),
+        Text(label, style: const TextStyle(color: Colors.white)),
       ],
     );
   }

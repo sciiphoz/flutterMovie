@@ -4,7 +4,7 @@ import 'package:flutter_guitar/video/player.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MoviePage extends StatefulWidget {
-  final String? id;
+  final int? id;
   const MoviePage(
     {
       super.key,
@@ -18,7 +18,7 @@ class MoviePage extends StatefulWidget {
 class _MoviePageState extends State<MoviePage> {
   final _supabase = Supabase.instance.client;
 
-  String? _id;
+  int? _id;
   List<Map<String, dynamic>> movie = [];
 
   @override
@@ -38,7 +38,7 @@ class _MoviePageState extends State<MoviePage> {
           final genre = item['genre'] as Map<String, dynamic>;
 
           return {
-            'id': item['id']?.toString() ?? '',
+            'id': item['id'] as int? ?? 0,
             'name_film': item['name_film']?.toString() ?? '',
             'url_img': item['url_img']?.toString() ?? '',
             'name': producer['name']?.toString() ?? '',
@@ -116,7 +116,7 @@ class _MoviePageState extends State<MoviePage> {
                         SizedBox(height: MediaQuery.of(context).size.height * 0.025),
                         Center(
                           child: ElevatedButton(onPressed: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => VideoPage()));
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => VideoPage(id: movie[0]['id'],)));
                           }, child: Text("Смотреть")),
                         ),
                         SizedBox(height: MediaQuery.of(context).size.height * 0.025),

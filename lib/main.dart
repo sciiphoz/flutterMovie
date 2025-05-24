@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_guitar/pages/films.dart';
 import 'package:flutter_guitar/pages/home.dart';
 import 'package:flutter_guitar/pages/landing.dart';
@@ -14,6 +15,12 @@ Future<void> main() async {
     url: 'https://mxpmkvurgancnbakuvxf.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14cG1rdnVyZ2FuY25iYWt1dnhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2MjI1ODMsImV4cCI6MjA2MDE5ODU4M30.lr-8oG4PXNSw_RAJ_fEFhjyN14vLS31lipgQC2EO8QA',
   );
+
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]);
 
   runApp(MovieApp());
 }
@@ -76,7 +83,6 @@ class MovieApp extends StatelessWidget {
         '/registration': (context) => RegPage(),
         '/recovery': (context) => RecoveryPage(),
         '/home': (context) => HomePage(),
-        '/player': (context) => VideoPage(),
         '/myfilms': (context) => MyFilmsPage(),
       },
     );
