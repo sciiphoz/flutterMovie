@@ -28,7 +28,7 @@ class _VideoPageState extends State<VideoPage> {
     try {
       final response = await _supabase
           .from('films')
-          .select('''url_film, name_film, year, age_rating, desc''')
+          .select('url_film, name_film, year, age_rating, desc')
           .eq('id', widget.id as Object)
           .single();
 
@@ -37,16 +37,16 @@ class _VideoPageState extends State<VideoPage> {
         _isLoading = false;
       });
 
-      _controller = VideoPlayerController.networkUrl(Uri.parse(_movie['url_film']))
-        ..addListener(() => setState(() {}))
-        ..setLooping(false)
-        ..initialize().then((_) {
-          setState(() {});
-          _controller.play();
-        });
+    _controller = VideoPlayerController.networkUrl(Uri.parse(_movie['url_film']));
+    _controller.addListener(() {
+      setState(() {});
+    });
+    _controller.setLooping(true);
+    _controller.initialize().then((_) => setState(() {}));
+    _controller.play();
 
     } catch (e) {
-      setState(() {
+      setState(() { 
         _hasError = true;
         _isLoading = false;
       });
@@ -83,49 +83,49 @@ class _VideoPageState extends State<VideoPage> {
 
   Widget _buildMovieInfo() {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             _movie['name_film'] ?? 'Название не указано',
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
               fontSize: 24.0,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8.0),
+          SizedBox(height: 8.0),
           Row(
             children: [
               Text(
                 '${_movie['year'] ?? ''}',
-                style: const TextStyle(color: Colors.grey),
+                style: TextStyle(color: Colors.grey),
               ),
-              const SizedBox(width: 16.0),
+              SizedBox(width: 16.0),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey),
                   borderRadius: BorderRadius.circular(4.0),
                 ),
                 child: Text(
-                  '${_movie['age_rating'] ?? '0'}+',
-                  style: const TextStyle(color: Colors.grey),
+                  '${_movie['age_rating'] ?? '0+'}',
+                  style: TextStyle(color: Colors.grey),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16.0),
+          SizedBox(height: 16.0),
           Text(
             _movie['desc'] ?? 'Описание отсутствует',
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white70,
               fontSize: 16.0,
               height: 1.5,
             ),
           ),
-          const SizedBox(height: 24.0),
+          SizedBox(height: 24.0),
           _ActionButtonsRow(),
         ],
       ),
@@ -134,18 +134,18 @@ class _VideoPageState extends State<VideoPage> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(child: CircularProgressIndicator());
     }
     if (_hasError) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Ошибка загрузки видео', style: TextStyle(color: Colors.white)),
-            const SizedBox(height: 16.0),
+            Text('Ошибка загрузки видео', style: TextStyle(color: Colors.white)),
+            SizedBox(height: 16.0),
             ElevatedButton(
               onPressed: _initializeVideo,
-              child: const Text('Повторить попытку'),
+              child: Text('Повторить попытку'),
             ),
           ],
         ),
@@ -191,20 +191,19 @@ class _VideoControlsOverlay extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withOpacity(0.5),
+                  Colors.black.withValues(alpha: 0.5),
                   Colors.transparent,
-                  Colors.black.withOpacity(0.5),
+                  Colors.black.withValues(alpha: 0.5),
                 ],
               ),
             ),
           ),
         ),
-        // Play/Pause controls
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
+          duration: Duration(milliseconds: 200),
           child: controller.value.isPlaying
-              ? const SizedBox.shrink()
-              : const Center(
+              ? SizedBox.shrink()
+              : Center(
                   child: Icon(
                     Icons.play_circle_filled,
                     color: Colors.white,
@@ -212,22 +211,20 @@ class _VideoControlsOverlay extends StatelessWidget {
                   ),
                 ),
         ),
-        // Progress bar
         VideoProgressIndicator(
           controller,
           allowScrubbing: true,
-          colors: const VideoProgressColors(
+          colors: VideoProgressColors(
             playedColor: Colors.red,
             bufferedColor: Colors.grey,
             backgroundColor: Colors.grey,
           ),
         ),
-        // Playback speed
         Positioned(
           top: 16.0,
           right: 16.0,
           child: PopupMenuButton<double>(
-            icon: const Icon(Icons.speed, color: Colors.white),
+            icon: Icon(Icons.speed, color: Colors.white),
             itemBuilder: (context) => [0.5, 1.0, 1.5, 2.0]
                 .map((speed) => PopupMenuItem(
                       value: speed,
@@ -247,16 +244,16 @@ class _TopAppBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: EdgeInsets.all(8.0),
         child: Row(
           children: [
             IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              icon: Icon(Icons.arrow_back, color: Colors.white),
               onPressed: () => Navigator.pop(context),
             ),
-            const Spacer(),
+            Spacer(),
             IconButton(
-              icon: const Icon(Icons.fullscreen, color: Colors.white),
+              icon: Icon(Icons.fullscreen, color: Colors.white),
               onPressed: () => _toggleFullscreen(context),
             ),
           ],
@@ -280,9 +277,7 @@ class _ActionButtonsRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildActionButton(Icons.add, 'В избранное'),
         _buildActionButton(Icons.thumb_up, 'Лайк'),
-        _buildActionButton(Icons.share, 'Поделиться'),
       ],
     );
   }
@@ -294,7 +289,7 @@ class _ActionButtonsRow extends StatelessWidget {
           icon: Icon(icon, color: Colors.white, size: 30.0),
           onPressed: () {},
         ),
-        Text(label, style: const TextStyle(color: Colors.white)),
+        Text(label, style: TextStyle(color: Colors.white)),
       ],
     );
   }
