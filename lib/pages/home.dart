@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_guitar/database/auth.dart';
 import 'package:flutter_guitar/database/user_requests.dart';
@@ -117,7 +119,7 @@ class _HomePageState extends State<HomePage> {
               Expanded(
                 child: SingleChildScrollView(
                   child: Padding(
-                    padding: EdgeInsets.only(bottom: 80), 
+                    padding: EdgeInsets.only(bottom: 80),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -125,13 +127,14 @@ class _HomePageState extends State<HomePage> {
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 8.0),
                           child: Wrap(
-                            direction: Axis.vertical,
+                            spacing: 20,
+                            runSpacing: 20,
                             children: filteredMovies.map((movie) {
                               return SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.8,
+                                width: MediaQuery.of(context).size.width * 0.4,
                                 child: MouseRegion(
-                                  onEnter: (_) => setState(() => _isHovered = true),
-                                  onExit: (_) => setState(() => _isHovered = false),
+                                  onEnter: (_) => setState(() => movie['hovered'] = true),
+                                  onExit: (_) => setState(() => movie['hovered'] = false),
                                   child: GestureDetector(
                                     onTap: () {
                                       Navigator.push(
@@ -144,57 +147,113 @@ class _HomePageState extends State<HomePage> {
                                     child: Stack(
                                       alignment: Alignment.center,
                                       children: [
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(16),
-                                          child: Image.network(
-                                            movie['url_img']!,
-                                            width: MediaQuery.of(context).size.width * 0.3,
-                                            fit: BoxFit.cover,
-                                          ),
+                                        AnimatedSwitcher(
+                                          duration: Duration(milliseconds: 300),
+                                          child: movie['hovered'] == true
+                                              ? ClipRRect(
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  child: ImageFiltered(
+                                                    imageFilter: ImageFilter.blur(
+                                                      sigmaX: 1.75,
+                                                      sigmaY: 1.75,
+                                                    ),
+                                                    child: Image.network(
+                                                      movie['url_img']!,
+                                                      height: MediaQuery.of(context).size.height * 0.3,
+                                                      width: double.infinity,
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                                  ),
+                                                )
+                                              : ClipRRect(
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  child: Image.network(
+                                                    movie['url_img']!,
+                                                    height: MediaQuery.of(context).size.height * 0.3,
+                                                    width: double.infinity,
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                                ),
                                         ),
-                                        if (_isHovered)
+                                        if (movie['hovered'] == true)
                                           AnimatedOpacity(
-                                            opacity: _isHovered ? 1.0 : 0.0,
-                                            duration: const Duration(milliseconds: 300),
+                                            opacity: movie['hovered'] == true ? 1.0 : 0.0,
+                                            duration: Duration(milliseconds: 200),
                                             child: Container(
+                                              padding: EdgeInsets.all(16),
+                                              width: double.infinity,
+                                              height: MediaQuery.of(context).size.height * 0.3,
                                               decoration: BoxDecoration(
                                                 color: Colors.black.withValues(alpha: 0.7),
-                                                borderRadius: BorderRadius.circular(16),
+                                                borderRadius: BorderRadius.circular(8),
                                               ),
-                                              padding: const EdgeInsets.all(8),
                                               child: Column(
                                                 mainAxisAlignment: MainAxisAlignment.center,
                                                 children: [
                                                   Text(
                                                     movie['name_film']!,
-                                                    style: const TextStyle(
+                                                    style: TextStyle(
                                                       color: Colors.white,
                                                       fontSize: 20,
                                                       fontWeight: FontWeight.bold,
                                                     ),
                                                     textAlign: TextAlign.center,
                                                     maxLines: 2,
+                                                    overflow: TextOverflow.ellipsis,
                                                   ),
-                                                  const SizedBox(height: 8),
+                                                  SizedBox(height: 8),
                                                   Text(
-                                                    movie['year']!,
-                                                    style: const TextStyle(
+                                                    '${movie['year']!} • ${movie['name']!}',
+                                                    style: TextStyle(
                                                       color: Colors.white70,
-                                                      fontSize: 16,
+                                                      fontSize: 14,
                                                     ),
+                                                    textAlign: TextAlign.center,
+                                                    maxLines: 1,
                                                   ),
-                                                  const SizedBox(height: 12),
+                                                  SizedBox(height: 16),
+                                                  ElevatedButton(
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor: Colors.redAccent,
+                                                      minimumSize: Size(120, 40),
+                                                    ),
+                                                    onPressed: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (context) => MoviePage(id: movie['id']!)
+                                                        ),
+                                                      );
+                                                    },
+                                                    child: Text('Смотреть'),
+                                                  ),
+                                                  SizedBox(height: 8),
                                                   IconButton(
                                                     onPressed: () async {
-                                                      if (await _supabase.from('usertable').count().eq('id_user', currentUser).eq('id_film', movie['id'] as int) == 1) {
-                                                        print('film est');
-                                                        return;
+                                                      final movieId = movie['id'] as int;
+                                                      
+                                                      final response = await _supabase
+                                                          .from('usertable')
+                                                          .select()
+                                                          .eq('id_user', currentUser)
+                                                          .eq('id_film', movieId);
+                                                      
+                                                      if (response.isEmpty) {
+                                                        await _supabase
+                                                            .from('usertable')
+                                                            .insert({
+                                                              'id_user': currentUser,
+                                                              'id_film': movieId,
+                                                            });
+                                                        ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Фильм добавлен в фильмотеку.', style: TextStyle(color: Colors.white),), 
+                                                        backgroundColor: Color.fromARGB(255, 25, 25, 40),)); 
                                                       } else {
-                                                        userRequests.addUserMovie(movie['id'], currentUser);
+                                                        ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Фильм уже в Вашей фильмотеке.', style: TextStyle(color: Colors.white),), 
+                                                        backgroundColor: Color.fromARGB(255, 25, 25, 40),)); 
                                                       }
                                                     },
                                                     icon: Icon(
-                                                      CupertinoIcons.heart,
+                                                      CupertinoIcons.heart_fill,
                                                       color: Colors.white,
                                                       size: 28,
                                                     ),
@@ -215,7 +274,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-              ),    
+              ),
             ],
           ),
         ),

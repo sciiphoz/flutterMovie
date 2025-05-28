@@ -91,7 +91,7 @@ class _AuthPageState extends State<AuthPage> {
                 child: ElevatedButton(onPressed: () async { 
                   if (emailController.text.isEmpty || passwordController.text.isEmpty) {
                     ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Все поля должны быть заполнены.', style: TextStyle(color: Colors.white),), 
-                    backgroundColor: Color.fromARGB(255, 45, 5, 5),));
+                    backgroundColor: Color.fromARGB(255, 25, 25, 40),));
                   } else {
                     var user = await authService.signIn(emailController.text, passwordController.text);
       
@@ -100,13 +100,13 @@ class _AuthPageState extends State<AuthPage> {
                       await prefs.setBool("isLoggedIn", true);
       
                       ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Добро пожаловать, ${user.email!}.', style: TextStyle(color: Colors.white),), 
-                      backgroundColor: Color.fromARGB(255, 45, 5, 5),));
+                      backgroundColor: Color.fromARGB(255, 25, 25, 40),));
       
                       Navigator.popAndPushNamed(context, '/'); 
                     } else {
                       ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Ошибка авторизации.', style: TextStyle(color: Colors.white),), 
 
-                      backgroundColor: Color.fromARGB(255, 45, 5, 5),));
+                      backgroundColor: Color.fromARGB(255, 25, 25, 40),));
                     } 
                   }
                 }, child: Text("Войти", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),),), 

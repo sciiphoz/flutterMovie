@@ -46,13 +46,13 @@ class RecoveryPage extends StatelessWidget {
                       onPressed: () async {
                         if (emailController.text.isEmpty) {
                           ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Поле почты должно быть заполнено.', style: TextStyle(color: Colors.white),), 
-                          backgroundColor: Color.fromARGB(255, 30, 4, 40),));
+                          backgroundColor: Color.fromARGB(255, 25, 25, 40),));
                         } else {
                           await authService.recoveryPassword(emailController.text);
                           emailController.clear();
       
                           ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Письмо с инструкциями отправлено на почту $emailController.', style: TextStyle(color: Colors.white),), 
-                          backgroundColor: Color.fromARGB(255, 30, 4, 40),));
+                          backgroundColor: Color.fromARGB(255, 25, 25, 40),));
                         }
                       },
                       icon: Icon(
