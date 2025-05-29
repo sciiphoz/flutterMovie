@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_guitar/database/auth.dart';
 import 'package:flutter_guitar/database/user_requests.dart';
@@ -20,15 +19,14 @@ class _HomePageState extends State<HomePage> {
   final _supabase = Supabase.instance.client;
   final TextEditingController _searchController = TextEditingController();
   final String currentUser = Supabase.instance.client.auth.currentUser!.id.toString();  
-  bool _isHovered = false;
+  bool _sortAscending = true;
+  String? _selectedGenre;
   
   AuthService authService = AuthService();
   UserRequests userRequests = UserRequests();
    
   List<Map<String, dynamic>> movie = []; 
   List<Map<String, dynamic>> likedMovies = [];
-
-  bool isPlaying = true;
 
   @override
   void initState() {
@@ -61,11 +59,178 @@ class _HomePageState extends State<HomePage> {
     catch (e) { print(e); }
   } 
 
-  List<Map<String, dynamic>> get filteredMovies => movie
-    .where((movie) =>
-      movie['name_film']!.toLowerCase().contains(_searchController.text.toLowerCase()) ||
-      movie['name']!.toLowerCase().contains(_searchController.text.toLowerCase()))
-    .toList();
+  List<Map<String, dynamic>> get filteredMovies {
+    List<Map<String, dynamic>> result = movie
+      .where((movie) =>
+        movie['name_film']!.toLowerCase().contains(_searchController.text.toLowerCase()) ||
+        movie['name']!.toLowerCase().contains(_searchController.text.toLowerCase()))
+      .toList();
+
+    // Сортировка по году
+    result.sort((a, b) {
+      final yearA = int.tryParse(a['year'] ?? '0') ?? 0;
+      final yearB = int.tryParse(b['year'] ?? '0') ?? 0;
+      return _sortAscending ? yearA.compareTo(yearB) : yearB.compareTo(yearA);
+    });
+
+    // Фильтрация по жанру
+    if (_selectedGenre != null && _selectedGenre!.isNotEmpty) {
+      result = result.where((m) => m['genre_name'] == _selectedGenre).toList();
+    }
+
+    return result;
+  }
+
+  Set<String> get allGenres {
+    return movie
+      .map((m) => m['genre_name'] as String? ?? '')
+      .where((genre) => genre.isNotEmpty)
+      .toSet();
+  }
+
+  Widget _buildMovieCard(Map<String, dynamic> movie) {
+    return SizedBox(
+      width: MediaQuery.of(context).size.width * 0.4,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => movie['hovered'] = true),
+        onExit: (_) => setState(() => movie['hovered'] = false),
+        child: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MoviePage(id: movie['id']!)
+              )
+            );
+          },
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              AnimatedSwitcher(
+                duration: Duration(milliseconds: 300),
+                child: movie['hovered'] == true
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: ImageFiltered(
+                          imageFilter: ImageFilter.blur(
+                            sigmaX: 1.75,
+                            sigmaY: 1.75,
+                          ),
+                          child: Image.network(
+                            movie['url_img']!,
+                            height: MediaQuery.of(context).size.height * 0.3,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      )
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          movie['url_img']!,
+                          height: MediaQuery.of(context).size.height * 0.3,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+              ),
+              if (movie['hovered'] == true)
+                AnimatedOpacity(
+                  opacity: movie['hovered'] == true ? 1.0 : 0.0,
+                  duration: Duration(milliseconds: 200),
+                  child: Container(
+                    padding: EdgeInsets.all(16),
+                    width: double.infinity,
+                    height: MediaQuery.of(context).size.height * 0.3,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.7),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          movie['name_film']!,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          '${movie['year']!} • ${movie['name']!}',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                        ),
+                        SizedBox(height: 16),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent,
+                            minimumSize: Size(120, 40),
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MoviePage(id: movie['id']!)
+                              ),
+                            );
+                          },
+                          child: Text('Смотреть'),
+                        ),
+                        SizedBox(height: 8),
+                        IconButton(
+                          onPressed: () async {
+                            final movieId = movie['id'] as int;
+                            
+                            final response = await _supabase
+                                .from('usertable')
+                                .select()
+                                .eq('id_user', currentUser)
+                                .eq('id_film', movieId);
+                            
+                            if (response.isEmpty) {
+                              await _supabase
+                                  .from('usertable')
+                                  .insert({
+                                    'id_user': currentUser,
+                                    'id_film': movieId,
+                                  });
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text('Фильм добавлен в фильмотеку.', style: TextStyle(color: Colors.white)),
+                                backgroundColor: Color.fromARGB(255, 25, 25, 40),
+                              )); 
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text('Фильм уже в Вашей фильмотеке.', style: TextStyle(color: Colors.white)),
+                                backgroundColor: Color.fromARGB(255, 25, 25, 40),
+                              )); 
+                            }
+                          },
+                          icon: Icon(
+                            CupertinoIcons.heart_fill,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,189 +253,107 @@ class _HomePageState extends State<HomePage> {
             children: [
               SizedBox(
                 width: MediaQuery.of(context).size.width * 0.8,
-                child: TextField(
-                  controller: _searchController,
-                  style: TextStyle(color: Colors.blueGrey[600]),
-                  cursorColor: Colors.white,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.search, color: Colors.white),
-                    labelText: 'Поиск по названию или продюсеру',
-                    labelStyle: TextStyle(color: Colors.white),
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                  });
-                },
+                child: Row(
+                  children: [
+                    // Поисковая строка
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        style: TextStyle(color: Colors.blueGrey[600]),
+                        cursorColor: Colors.white,
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(Icons.search, color: Colors.white),
+                          labelText: 'Поиск по названию или продюсеру',
+                          labelStyle: TextStyle(color: Colors.white),
+                          contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        ),
+                        onChanged: (value) {
+                          setState(() {});
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    // Фильтр по жанру
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: DropdownButton<String>(
+                        value: _selectedGenre,
+                        hint: Text('Жанр', style: TextStyle(color: Colors.white70)),
+                        dropdownColor: Color.fromARGB(255, 45, 20, 20),
+                        icon: Icon(Icons.arrow_drop_down, color: Colors.white),
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                        underline: SizedBox(),
+                        isExpanded: false,
+                        items: [
+                          DropdownMenuItem(
+                            value: null,
+                            child: Text('Все жанры', style: TextStyle(color: Colors.white)),
+                          ),
+                          ...allGenres.map((genre) {
+                            return DropdownMenuItem(
+                              value: genre,
+                              child: Text(genre, style: TextStyle(color: Colors.white)),
+                            );
+                          }).toList(),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedGenre = value;
+                          });
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    // Кнопка сортировки по году
+                    Tooltip(
+                      message: 'Сортировать по году',
+                      child: IconButton(
+                        icon: Icon(
+                          _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _sortAscending = !_sortAscending;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              SizedBox(
-                height: MediaQuery.of(context).size.height * 0.05,
-              ),
+              SizedBox(height: 24),
               SizedBox(
                 width: MediaQuery.of(context).size.width * 0.8,
-                child: Text(
-                  "Фильмы",
-                  style: TextStyle(fontSize: 42),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Фильмы",
+                      style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                    ),
+                    if (_selectedGenre != null)
+                      Text(
+                        "Жанр: $_selectedGenre",
+                        style: TextStyle(fontSize: 16, color: Colors.white70),
+                      ),
+                  ],
                 ),
               ),
-              SizedBox(
-                height: MediaQuery.of(context).size.height * 0.05,
-              ),
+              SizedBox(height: 16),
               Expanded(
                 child: SingleChildScrollView(
                   child: Padding(
                     padding: EdgeInsets.only(bottom: 80),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Wrap(
-                            spacing: 20,
-                            runSpacing: 20,
-                            children: filteredMovies.map((movie) {
-                              return SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.4,
-                                child: MouseRegion(
-                                  onEnter: (_) => setState(() => movie['hovered'] = true),
-                                  onExit: (_) => setState(() => movie['hovered'] = false),
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => MoviePage(id: movie['id']!)
-                                        )
-                                      );
-                                    },
-                                    child: Stack(
-                                      alignment: Alignment.center,
-                                      children: [
-                                        AnimatedSwitcher(
-                                          duration: Duration(milliseconds: 300),
-                                          child: movie['hovered'] == true
-                                              ? ClipRRect(
-                                                  borderRadius: BorderRadius.circular(8),
-                                                  child: ImageFiltered(
-                                                    imageFilter: ImageFilter.blur(
-                                                      sigmaX: 1.75,
-                                                      sigmaY: 1.75,
-                                                    ),
-                                                    child: Image.network(
-                                                      movie['url_img']!,
-                                                      height: MediaQuery.of(context).size.height * 0.3,
-                                                      width: double.infinity,
-                                                      fit: BoxFit.cover,
-                                                    ),
-                                                  ),
-                                                )
-                                              : ClipRRect(
-                                                  borderRadius: BorderRadius.circular(8),
-                                                  child: Image.network(
-                                                    movie['url_img']!,
-                                                    height: MediaQuery.of(context).size.height * 0.3,
-                                                    width: double.infinity,
-                                                    fit: BoxFit.cover,
-                                                  ),
-                                                ),
-                                        ),
-                                        if (movie['hovered'] == true)
-                                          AnimatedOpacity(
-                                            opacity: movie['hovered'] == true ? 1.0 : 0.0,
-                                            duration: Duration(milliseconds: 200),
-                                            child: Container(
-                                              padding: EdgeInsets.all(16),
-                                              width: double.infinity,
-                                              height: MediaQuery.of(context).size.height * 0.3,
-                                              decoration: BoxDecoration(
-                                                color: Colors.black.withValues(alpha: 0.7),
-                                                borderRadius: BorderRadius.circular(8),
-                                              ),
-                                              child: Column(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Text(
-                                                    movie['name_film']!,
-                                                    style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 20,
-                                                      fontWeight: FontWeight.bold,
-                                                    ),
-                                                    textAlign: TextAlign.center,
-                                                    maxLines: 2,
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                  SizedBox(height: 8),
-                                                  Text(
-                                                    '${movie['year']!} • ${movie['name']!}',
-                                                    style: TextStyle(
-                                                      color: Colors.white70,
-                                                      fontSize: 14,
-                                                    ),
-                                                    textAlign: TextAlign.center,
-                                                    maxLines: 1,
-                                                  ),
-                                                  SizedBox(height: 16),
-                                                  ElevatedButton(
-                                                    style: ElevatedButton.styleFrom(
-                                                      backgroundColor: Colors.redAccent,
-                                                      minimumSize: Size(120, 40),
-                                                    ),
-                                                    onPressed: () {
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder: (context) => MoviePage(id: movie['id']!)
-                                                        ),
-                                                      );
-                                                    },
-                                                    child: Text('Смотреть'),
-                                                  ),
-                                                  SizedBox(height: 8),
-                                                  IconButton(
-                                                    onPressed: () async {
-                                                      final movieId = movie['id'] as int;
-                                                      
-                                                      final response = await _supabase
-                                                          .from('usertable')
-                                                          .select()
-                                                          .eq('id_user', currentUser)
-                                                          .eq('id_film', movieId);
-                                                      
-                                                      if (response.isEmpty) {
-                                                        await _supabase
-                                                            .from('usertable')
-                                                            .insert({
-                                                              'id_user': currentUser,
-                                                              'id_film': movieId,
-                                                            });
-                                                        ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Фильм добавлен в фильмотеку.', style: TextStyle(color: Colors.white),), 
-                                                        backgroundColor: Color.fromARGB(255, 25, 25, 40),)); 
-                                                      } else {
-                                                        ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Фильм уже в Вашей фильмотеке.', style: TextStyle(color: Colors.white),), 
-                                                        backgroundColor: Color.fromARGB(255, 25, 25, 40),)); 
-                                                      }
-                                                    },
-                                                    icon: Icon(
-                                                      CupertinoIcons.heart_fill,
-                                                      color: Colors.white,
-                                                      size: 28,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ],
+                    child: Wrap(
+                      spacing: 20,
+                      runSpacing: 20,
+                      alignment: WrapAlignment.center,
+                      children: filteredMovies.map((movie) => _buildMovieCard(movie)).toList(),
                     ),
                   ),
                 ),
@@ -279,7 +362,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         appBar: AppBar(
-          title: Text("Главная", style: TextStyle(color: Colors.white),),
+          title: Text("Главная", style: TextStyle(color: Colors.white)),
         ),
         drawer: DrawerPage(),
       ),

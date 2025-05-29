@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_guitar/pages/films.dart';
 import 'package:flutter_guitar/pages/home.dart';
 import 'package:flutter_guitar/pages/landing.dart';
-import 'package:flutter_guitar/video/player.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_guitar/pages/auth.dart';
 import 'package:flutter_guitar/pages/recovery.dart';
