@@ -110,7 +110,7 @@ class _HomePageState extends State<HomePage> {
                 duration: Duration(milliseconds: 300),
                 child: movie['hovered'] == true
                     ? ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                         child: ImageFiltered(
                           imageFilter: ImageFilter.blur(
                             sigmaX: 1.75,
@@ -125,7 +125,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       )
                     : ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                         child: Image.network(
                           movie['url_img']!,
                           height: MediaQuery.of(context).size.height * 0.3,
@@ -144,7 +144,8 @@ class _HomePageState extends State<HomePage> {
                     height: MediaQuery.of(context).size.height * 0.3,
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.7),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5), width: 1),
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -175,6 +176,10 @@ class _HomePageState extends State<HomePage> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.redAccent,
                             minimumSize: Size(120, 40),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 4,
                           ),
                           onPressed: () {
                             Navigator.push(
@@ -184,7 +189,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                             );
                           },
-                          child: Text('Смотреть'),
+                          child: Text('Смотреть', style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
                         SizedBox(height: 8),
                         IconButton(
@@ -206,18 +211,26 @@ class _HomePageState extends State<HomePage> {
                                   });
                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                                 content: Text('Фильм добавлен в фильмотеку.', style: TextStyle(color: Colors.white)),
-                                backgroundColor: Color.fromARGB(255, 25, 25, 40),
+                                backgroundColor: Color(0xFF2D1414),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               )); 
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                                 content: Text('Фильм уже в Вашей фильмотеке.', style: TextStyle(color: Colors.white)),
-                                backgroundColor: Color.fromARGB(255, 25, 25, 40),
+                                backgroundColor: Color(0xFF2D1414),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               )); 
                             }
                           },
                           icon: Icon(
                             CupertinoIcons.heart_fill,
-                            color: Colors.white,
+                            color: Colors.redAccent,
                             size: 28,
                           ),
                         ),
@@ -241,8 +254,11 @@ class _HomePageState extends State<HomePage> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color.fromARGB(255, 45, 20, 20), 
-          Color.fromARGB(255, 35, 35, 60), ]
+          colors: [
+            Color(0xFF2D1414), 
+            Color(0xFF23233C),
+          ],
+          stops: [0.0, 0.8],
         )
       ),
       child: Scaffold(
@@ -257,64 +273,103 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     // Поисковая строка
                     Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        style: TextStyle(color: Colors.blueGrey[600]),
-                        cursorColor: Colors.white,
-                        decoration: InputDecoration(
-                          prefixIcon: Icon(Icons.search, color: Colors.white),
-                          labelText: 'Поиск по названию или продюсеру',
-                          labelStyle: TextStyle(color: Colors.white),
-                          contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 6,
+                              offset: Offset(0, 3),
+                            ),
+                          ],
                         ),
-                        onChanged: (value) {
-                          setState(() {});
-                        },
+                        child: TextField(
+                          controller: _searchController,
+                          style: TextStyle(color: Colors.white),
+                          cursorColor: Colors.redAccent,
+                          decoration: InputDecoration(
+                            prefixIcon: Icon(Icons.search, color: Colors.white70),
+                            hintText: 'Поиск по названию или продюсеру',
+                            hintStyle: TextStyle(color: Colors.white54),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                          ),
+                          onChanged: (value) {
+                            setState(() {});
+                          },
+                        ),
                       ),
                     ),
                     SizedBox(width: 12),
                     // Фильтр по жанру
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: DropdownButton<String>(
-                        value: _selectedGenre,
-                        hint: Text('Жанр', style: TextStyle(color: Colors.white70)),
-                        dropdownColor: Color.fromARGB(255, 45, 20, 20),
-                        icon: Icon(Icons.arrow_drop_down, color: Colors.white),
-                        style: TextStyle(color: Colors.white, fontSize: 14),
-                        underline: SizedBox(),
-                        isExpanded: false,
-                        items: [
-                          DropdownMenuItem(
-                            value: null,
-                            child: Text('Все жанры', style: TextStyle(color: Colors.white)),
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 6,
+                            offset: Offset(0, 3),
                           ),
-                          ...allGenres.map((genre) {
-                            return DropdownMenuItem(
-                              value: genre,
-                              child: Text(genre, style: TextStyle(color: Colors.white)),
-                            );
-                          }).toList(),
                         ],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedGenre = value;
-                          });
-                        },
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _selectedGenre,
+                          hint: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 12),
+                            child: Text('Жанр', style: TextStyle(color: Colors.white70)),
+                          ),
+                          dropdownColor: Color(0xFF2D1414),
+                          icon: Icon(Icons.arrow_drop_down, color: Colors.white70),
+                          iconSize: 24,
+                          style: TextStyle(color: Colors.white, fontSize: 14),
+                          borderRadius: BorderRadius.circular(10),
+                          items: [
+                            DropdownMenuItem<String>(
+                              value: null,
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 12),
+                                child: Text('Все жанры', style: TextStyle(color: Colors.white)),
+                              ),
+                            ),
+                            ...allGenres.map((genre) => DropdownMenuItem<String>(
+                              value: genre,
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 12),
+                                child: Text(genre, style: TextStyle(color: Colors.white)),
+                              ),
+                            )).toList(),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedGenre = value;
+                            });
+                          },
+                        )
                       ),
                     ),
                     SizedBox(width: 8),
                     // Кнопка сортировки по году
-                    Tooltip(
-                      message: 'Сортировать по году',
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 6,
+                            offset: Offset(0, 3),
+                          ),
+                        ],
+                      ),
                       child: IconButton(
                         icon: Icon(
                           _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
-                          color: Colors.white,
+                          color: Colors.white70,
                         ),
                         onPressed: () {
                           setState(() {
@@ -334,12 +389,34 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     Text(
                       "Фильмы",
-                      style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 32, 
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(
+                            blurRadius: 6,
+                            color: Colors.black.withValues(alpha: 0.3),
+                            offset: Offset(0, 3),
+                          ),
+                        ],
+                      ),
                     ),
                     if (_selectedGenre != null)
-                      Text(
-                        "Жанр: $_selectedGenre",
-                        style: TextStyle(fontSize: 16, color: Colors.white70),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
+                        ),
+                        child: Text(
+                          "Жанр: $_selectedGenre",
+                          style: TextStyle(
+                            fontSize: 14, 
+                            color: Colors.white70,
+                          ),
+                        ),
                       ),
                   ],
                 ),
@@ -363,6 +440,9 @@ class _HomePageState extends State<HomePage> {
         ),
         appBar: AppBar(
           title: Text("Главная", style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          iconTheme: IconThemeData(color: Colors.white),
         ),
         drawer: DrawerPage(),
       ),

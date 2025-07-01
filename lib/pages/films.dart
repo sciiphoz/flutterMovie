@@ -1,374 +1,561 @@
-import 'dart:ui';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flutter_guitar/database/auth.dart';
-import 'package:flutter_guitar/database/user_requests.dart';
-import 'package:flutter_guitar/pages/drawer.dart';
-import 'package:flutter_guitar/pages/movie.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:video_player/video_player.dart';
+import 'package:provider/provider.dart';
 
-class MyFilmsPage extends StatefulWidget {
-  const MyFilmsPage({super.key});
+class VideoPage extends StatefulWidget {
+  final int? id;
+  const VideoPage({super.key, required this.id});
 
   @override
-  State<MyFilmsPage> createState() => _MyFilmsPageState();
+  State<VideoPage> createState() => _VideoPageState();
 }
 
-class _MyFilmsPageState extends State<MyFilmsPage> {
-  final _supabase = Supabase.instance.client;
-  final TextEditingController _searchController = TextEditingController();
-  final String currentUser = Supabase.instance.client.auth.currentUser!.id.toString();  
-  bool _sortAscending = true;
-  String? _selectedGenre;
-  
-  AuthService authService = AuthService();
-  UserRequests userRequests = UserRequests();
-   
-  List<Map<String, dynamic>> movie = []; 
-  List<Map<String, dynamic>> likedMovies = [];
+class _VideoPageState extends State<VideoPage> {
+  final SupabaseClient _supabase = Supabase.instance.client;
+  late VideoPlayerController _controller;
+  bool _isLoading = true;
+  bool _hasError = false;
+  Map<String, dynamic> _movie = {};
+  bool _isControlsVisible = true;
+  List<Map<String, dynamic>> _reviews = [];
+  final TextEditingController _commentController = TextEditingController();
+  int _selectedRating = 0;
+  bool _isCommentLoading = false;
 
   @override
   void initState() {
     super.initState();
-    getMovie();
+    _initializeVideo();
+    _loadReviews();
   }
 
-  Future<void> getMovie() async {
+  Future<void> _initializeVideo() async {
     try {
-      final response = await _supabase.from('usertable').select('films(id, name_film, url_img, producer(name), genre(genre_name), place, year, age_rating), id_user').eq('id_user', currentUser);
+      final response = await _supabase
+          .from('films')
+          .select('url_film, name_film, year, age_rating, desc, rating, rating_num')
+          .eq('id', widget.id as Object)
+          .single();
 
       setState(() {
-        movie = response.map((item) {
-          final film = item['films'] as Map<String, dynamic>? ?? {};
-          
-          final producer = (film['producer'] as Map<String, dynamic>? ?? {});
-          final genre = (film['genre'] as Map<String, dynamic>? ?? {});
-
-          return {
-            'id': film['id'] as int? ?? 0,
-            'name_film': film['name_film']?.toString() ?? 'Без названия',
-            'url_img': film['url_img']?.toString() ?? '',
-            'name': producer['name']?.toString() ?? 'Неизвестный продюсер',
-            'genre_name': genre['genre_name']?.toString() ?? 'Неизвестный жанр',
-            'place': film['place']?.toString() ?? 'Неизвестно',
-            'year': (film['year'] as int?)?.toString() ?? 'Год не указан',
-            'age_rating': film['age_rating']?.toString() ?? '0+',
-          };
-        }).toList();
+        _movie = response;
+        _isLoading = false;
       });
-    } catch (e) { 
-      print('Ошибка загрузки избранных фильмов: $e'); 
+
+      _controller = VideoPlayerController.networkUrl(Uri.parse(_movie['url_film']))
+        ..addListener(() {
+          if (mounted) setState(() {});
+        })
+        ..setLooping(true)
+        ..initialize().then((_) {
+          if (mounted) {
+            setState(() {});
+            _controller.play();
+          }
+        });
+
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _isLoading = false;
+        });
+      }
+      print('Error loading video: $e');
+    }
+  }
+
+  Future<void> _loadReviews() async {
+    try {
+      final response = await _supabase
+          .from('reviews')
+          .select('id, review_text, rating, created_at, users(username)')
+          .eq('id_film', widget.id as Object)
+          .order('created_at', ascending: false);
+
+      if (mounted) {
+        setState(() {
+          _reviews = response;
+        });
+      }
+    } catch (e) {
+      print('Error loading reviews: $e');
+    }
+  }
+
+  Future<void> _submitComment() async {
+    if (_commentController.text.isEmpty || _selectedRating == 0) return;
+
+    setState(() => _isCommentLoading = true);
+
+    try {
+      await _supabase.from('reviews').insert({
+        'id_film': widget.id,
+        'review_text': _commentController.text,
+        'rating': _selectedRating,
+        'id_user': _supabase.auth.currentUser?.id,
+      });
+
+      await _supabase.rpc('update_film_rating', params: {
+        'film_id': widget.id,
+        'new_rating': _selectedRating,
+      });
+
+      await _initializeVideo();
+      await _loadReviews();
+
+      _commentController.clear();
+      setState(() {
+        _selectedRating = 0;
+        _isCommentLoading = false;
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Ошибка загрузки ваших фильмов', style: TextStyle(color: Colors.white)),
-          backgroundColor: Color.fromARGB(255, 25, 25, 40),
-        )
+        const SnackBar(content: Text('Комментарий добавлен')),
       );
+    } catch (e) {
+      setState(() => _isCommentLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка: $e')),
+      );
+      print('Error submitting comment: $e');
     }
-  } 
-
-  List<Map<String, dynamic>> get filteredMovies {
-    List<Map<String, dynamic>> result = movie
-      .where((movie) =>
-        movie['name_film']!.toLowerCase().contains(_searchController.text.toLowerCase()) ||
-        movie['name']!.toLowerCase().contains(_searchController.text.toLowerCase()))
-      .toList();
-
-    // Сортировка по году
-    result.sort((a, b) {
-      final yearA = int.tryParse(a['year'] ?? '0') ?? 0;
-      final yearB = int.tryParse(b['year'] ?? '0') ?? 0;
-      return _sortAscending ? yearA.compareTo(yearB) : yearB.compareTo(yearA);
-    });
-
-    // Фильтрация по жанру
-    if (_selectedGenre != null && _selectedGenre!.isNotEmpty) {
-      result = result.where((m) => m['genre_name'] == _selectedGenre).toList();
-    }
-
-    return result;
   }
 
-  Set<String> get allGenres {
-    return movie
-      .map((m) => m['genre_name'] as String? ?? '')
-      .where((genre) => genre.isNotEmpty)
-      .toSet();
+  @override
+  void dispose() {
+    _controller.dispose();
+    _commentController.dispose();
+    super.dispose();
   }
 
-  Widget _buildMovieCard(Map<String, dynamic> movie) {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.4,
-      child: MouseRegion(
-        onEnter: (_) => setState(() => movie['hovered'] = true),
-        onExit: (_) => setState(() => movie['hovered'] = false),
-        child: GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => MoviePage(id: movie['id']!)
-              )
-            );
-          },
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              AnimatedSwitcher(
-                duration: Duration(milliseconds: 300),
-                child: movie['hovered'] == true
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: ImageFiltered(
-                          imageFilter: ImageFilter.blur(
-                            sigmaX: 1.75,
-                            sigmaY: 1.75,
-                          ),
-                          child: Image.network(
-                            movie['url_img']!,
-                            height: MediaQuery.of(context).size.height * 0.3,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      )
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          movie['url_img']!,
-                          height: MediaQuery.of(context).size.height * 0.3,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-              ),
-              if (movie['hovered'] == true)
-                AnimatedOpacity(
-                  opacity: movie['hovered'] == true ? 1.0 : 0.0,
-                  duration: Duration(milliseconds: 200),
-                  child: Container(
-                    padding: EdgeInsets.all(16),
-                    width: double.infinity,
-                    height: MediaQuery.of(context).size.height * 0.3,
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.7),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          movie['name_film']!,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          '${movie['year']!} • ${movie['name']!}',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                        ),
-                        SizedBox(height: 16),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.redAccent,
-                            minimumSize: Size(120, 40),
-                          ),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => MoviePage(id: movie['id']!)
-                              ),
-                            );
-                          },
-                          child: Text('Смотреть'),
-                        ),
-                        SizedBox(height: 8),
-                        IconButton(
-                          onPressed: () async {
-                            final movieId = movie['id'] as int;
-                            
-                            final response = await _supabase
-                                .from('usertable')
-                                .select()
-                                .eq('id_user', currentUser)
-                                .eq('id_film', movieId);
-                            
-                            if (response.isNotEmpty) {
-                              await _supabase.from('usertable').delete().eq('id_user', currentUser).eq('id_film', movieId);
+  void _toggleControls() {
+    setState(() => _isControlsVisible = !_isControlsVisible);
+  }
 
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content: Text('Фильм успешно удалён из фильмотеки.', style: TextStyle(color: Colors.white)), 
-                                backgroundColor: Color.fromARGB(255, 25, 25, 40),
-                              )); 
-
-                              // Обновляем список
-                              getMovie();
-                            }
-                          },
-                          icon: Icon(
-                            CupertinoIcons.heart_fill,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
-          ),
+  Widget _buildVideoPlayer() {
+    return AspectRatio(
+      aspectRatio: _controller.value.aspectRatio,
+      child: GestureDetector(
+        onTap: _toggleControls,
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            VideoPlayer(_controller),
+            if (_isControlsVisible) _VideoControlsOverlay(controller: _controller),
+            if (_isControlsVisible) _TopAppBar(),
+          ],
         ),
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color.fromARGB(255, 45, 20, 20), 
-          Color.fromARGB(255, 35, 35, 60), ]
-        )
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,        
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildMovieInfo() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _movie['name_film'] ?? 'Название не указано',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 24.0,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8.0),
+          Row(
             children: [
-              SizedBox(
-                width: MediaQuery.of(context).size.width * 0.8,
-                child: Row(
-                  children: [
-                    // Поисковая строка
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        style: TextStyle(color: Colors.blueGrey[600]),
-                        cursorColor: Colors.white,
-                        decoration: InputDecoration(
-                          prefixIcon: Icon(Icons.search, color: Colors.white),
-                          labelText: 'Поиск в вашей фильмотеке',
-                          labelStyle: TextStyle(color: Colors.white),
-                          contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                        ),
-                        onChanged: (value) {
-                          setState(() {});
-                        },
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    // Фильтр по жанру
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: DropdownButton<String>(
-                        value: _selectedGenre,
-                        hint: Text('Жанр', style: TextStyle(color: Colors.white70)),
-                        dropdownColor: Color.fromARGB(255, 45, 20, 20),
-                        icon: Icon(Icons.arrow_drop_down, color: Colors.white),
-                        style: TextStyle(color: Colors.white, fontSize: 14),
-                        underline: SizedBox(),
-                        isExpanded: false,
-                        items: [
-                          DropdownMenuItem(
-                            value: null,
-                            child: Text('Все жанры', style: TextStyle(color: Colors.white)),
-                          ),
-                          ...allGenres.map((genre) {
-                            return DropdownMenuItem(
-                              value: genre,
-                              child: Text(genre, style: TextStyle(color: Colors.white)),
-                            );
-                          }).toList(),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedGenre = value;
-                          });
-                        },
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    // Кнопка сортировки по году
-                    Tooltip(
-                      message: 'Сортировать по году',
-                      child: IconButton(
-                        icon: Icon(
-                          _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
-                          color: Colors.white,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _sortAscending = !_sortAscending;
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
+              Text(
+                '${_movie['year'] ?? ''}',
+                style: const TextStyle(color: Colors.grey),
               ),
-              SizedBox(height: 24),
-              SizedBox(
-                width: MediaQuery.of(context).size.width * 0.8,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Моя фильмотека",
-                      style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-                    ),
-                    if (_selectedGenre != null)
-                      Text(
-                        "Жанр: $_selectedGenre",
-                        style: TextStyle(fontSize: 16, color: Colors.white70),
-                      ),
-                  ],
+              const SizedBox(width: 16.0),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(4.0),
                 ),
-              ),
-              SizedBox(height: 16),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: 80),
-                    child: Wrap(
-                      spacing: 20,
-                      runSpacing: 20,
-                      alignment: WrapAlignment.center,
-                      children: filteredMovies.map((movie) => _buildMovieCard(movie)).toList(),
-                    ),
-                  ),
+                child: Text(
+                  '${_movie['age_rating'] ?? '0+'}',
+                  style: const TextStyle(color: Colors.grey),
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 16.0),
+          Text(
+            _movie['desc'] ?? 'Описание отсутствует',
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 16.0,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCommentForm() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Оставить отзыв',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20.0,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8.0),
+          TextField(
+            controller: _commentController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: 'Ваш отзыв...',
+              border: const OutlineInputBorder(),
+              filled: true,
+              fillColor: Colors.grey[900],
+            ),
+            style: const TextStyle(color: Colors.white),
+          ),
+          const SizedBox(height: 12.0),
+          const Text(
+            'Оценка:',
+            style: TextStyle(color: Colors.white),
+          ),
+          const SizedBox(height: 8.0),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(5, (index) {
+              return IconButton(
+                icon: Icon(
+                  Icons.star,
+                  color: _selectedRating > index ? Colors.amber : Colors.grey,
+                  size: 30.0,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _selectedRating = index + 1;
+                  });
+                },
+              );
+            }),
+          ),
+          const SizedBox(height: 12.0),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _isCommentLoading ? null : _submitComment,
+              child: _isCommentLoading
+                  ? const CircularProgressIndicator()
+                  : const Text('Отправить отзыв'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReviewsList() {
+    if (_reviews.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Center(
+          child: Text(
+            'Пока нет отзывов. Будьте первым!',
+            style: TextStyle(color: Colors.white70),
+          ),
         ),
-        appBar: AppBar(
-          title: Text("Мои фильмы", style: TextStyle(color: Colors.white)),
+      );
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _reviews.length,
+      itemBuilder: (context, index) {
+        final review = _reviews[index];
+        final user = review['users'] as Map<String, dynamic>? ?? {};
+        
+        return Card(
+          color: Colors.grey[900],
+          margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      user['username'] ?? 'Аноним',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Row(
+                      children: List.generate(5, (i) {
+                        return Icon(
+                          Icons.star,
+                          color: i < (review['rating'] as int? ?? 0)
+                              ? Colors.amber
+                              : Colors.grey,
+                          size: 16.0,
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8.0),
+                Text(
+                  review['review_text'] ?? '',
+                  style: const TextStyle(color: Colors.white70),
+                ),
+                const SizedBox(height: 8.0),
+                Text(
+                  '${review['created_at']?.toString().substring(0, 10) ?? ''}',
+                  style: const TextStyle(color: Colors.grey, fontSize: 12.0),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_hasError) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Ошибка загрузки видео', style: TextStyle(color: Colors.white)),
+            const SizedBox(height: 16.0),
+            ElevatedButton(
+              onPressed: _initializeVideo,
+              child: const Text('Повторить попытку'),
+            ),
+          ],
         ),
-        drawer: DrawerPage(isHomePage: false,),
+      );
+    }
+    return CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          expandedHeight: MediaQuery.of(context).size.height * 0.4,
+          flexibleSpace: FlexibleSpaceBar(
+            background: _buildVideoPlayer(),
+          ),
+          pinned: true,
+        ),
+        SliverToBoxAdapter(child: _buildMovieInfo()),
+        SliverToBoxAdapter(child: _buildCommentForm()),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 16.0, top: 24.0),
+            child: const Text(
+              'Отзывы',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20.0,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+        SliverList(delegate: SliverChildListDelegate([_buildReviewsList()])),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: _buildBody(),
+    );
+  }
+}
+
+class _VideoControlsOverlay extends StatelessWidget {
+  final VideoPlayerController controller;
+
+  const _VideoControlsOverlay({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        // Gradient overlay
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.3),
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: 0.7),
+                ],
+                stops: [0.0, 0.5, 1.0],
+              ),
+            ),
+          ),
+        ),
+        // Play/pause button
+        Align(
+          alignment: Alignment.center,
+          child: AnimatedOpacity(
+            opacity: controller.value.isPlaying ? 0.0 : 1.0,
+            duration: const Duration(milliseconds: 300),
+            child: IconButton(
+              icon: const Icon(
+                Icons.play_arrow,
+                color: Colors.white,
+                size: 50.0,
+              ),
+              onPressed: () {
+                controller.play();
+              },
+            ),
+          ),
+        ),
+        // Bottom controls bar
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 60,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.7),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                // Progress bar
+                VideoProgressIndicator(
+                  controller,
+                  allowScrubbing: true,
+                  colors: const VideoProgressColors(
+                    playedColor: Colors.red,
+                    bufferedColor: Colors.grey,
+                    backgroundColor: Colors.grey,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                ),
+                // Time and controls
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                  child: Row(
+                    children: [
+                      // Current time
+                      Text(
+                        controller.value.position.toString().split('.').first,
+                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                      const Spacer(),
+                      // Play/pause button
+                      IconButton(
+                        icon: Icon(
+                          controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                        onPressed: () {
+                          if (controller.value.isPlaying) {
+                            controller.pause();
+                          } else {
+                            controller.play();
+                          }
+                        },
+                      ),
+                      const SizedBox(width: 16),
+                      // Fullscreen button
+                      IconButton(
+                        icon: const Icon(Icons.fullscreen, color: Colors.white, size: 24),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => Scaffold(
+                                backgroundColor: Colors.black,
+                                body: Center(
+                                  child: AspectRatio(
+                                    aspectRatio: controller.value.aspectRatio,
+                                    child: VideoPlayer(controller),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      // Speed control
+                      PopupMenuButton<double>(
+                        icon: const Icon(Icons.speed, color: Colors.white, size: 24),
+                        itemBuilder: (context) => [0.5, 1.0, 1.5, 2.0]
+                            .map((speed) => PopupMenuItem(
+                                  value: speed,
+                                  child: Text('${speed}x'),
+                                ))
+                            .toList(),
+                        onSelected: (speed) => controller.setPlaybackSpeed(speed),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TopAppBar extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
+              const Spacer(),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -203,7 +203,7 @@ class _DrawerPageState extends State<DrawerPage> {
                   leading: Icon(Icons.logout),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
-                    side: BorderSide(color: Colors.redAccent.withOpacity(0.5)),
+                    side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.5)),
                   ),
                 ),
               ),

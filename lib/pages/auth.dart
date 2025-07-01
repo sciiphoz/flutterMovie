@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_guitar/database/auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class AuthPage extends StatefulWidget 
-{
+class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
 
   @override
@@ -14,6 +13,7 @@ class _AuthPageState extends State<AuthPage> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   AuthService authService = AuthService();
+  bool _obscurePassword = true; // Состояние видимости пароля
 
   @override
   Widget build(BuildContext context) {
@@ -24,8 +24,10 @@ class _AuthPageState extends State<AuthPage> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color.fromARGB(255, 45, 20, 20), 
-          Color.fromARGB(255, 35, 35, 60), ]
+          colors: [
+            Color.fromARGB(255, 45, 20, 20),
+            Color.fromARGB(255, 35, 35, 60),
+          ]
         )
       ),
       child: Scaffold(
@@ -54,6 +56,13 @@ class _AuthPageState extends State<AuthPage> {
                       decoration: InputDecoration(
                         prefixIcon: Icon(Icons.email, color: Colors.white),
                         labelText: 'Почта',
+                        labelStyle: TextStyle(color: Colors.white70),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white70),
+                        ),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.redAccent),
+                        ),
                       ),
                     ),
                     SizedBox(
@@ -61,11 +70,30 @@ class _AuthPageState extends State<AuthPage> {
                     ),
                     TextField(
                       controller: passwordController,
+                      obscureText: _obscurePassword, // Используем состояние для скрытия пароля
                       style: TextStyle(color: Colors.white),
                       cursorColor: Colors.white,
                       decoration: InputDecoration(
                         prefixIcon: Icon(Icons.password, color: Colors.white),
                         labelText: 'Пароль',
+                        labelStyle: TextStyle(color: Colors.white70),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white70),
+                        ),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.redAccent),
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            color: Colors.white70,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword; // Переключаем состояние
+                            });
+                          },
+                        ),
                       ),
                     ),
                   ]
@@ -78,7 +106,10 @@ class _AuthPageState extends State<AuthPage> {
                 width: MediaQuery.of(context).size.width * 0.8,
                 alignment: Alignment.centerRight,
                 child: InkWell(
-                  child: Text("Забыли пароль?",),
+                  child: Text(
+                    "Забыли пароль?",
+                    style: TextStyle(color: Colors.white70),
+                  ),
                   onTap: (){ Navigator.popAndPushNamed(context, '/recovery'); },
                 ),
               ),
@@ -88,28 +119,75 @@ class _AuthPageState extends State<AuthPage> {
               SizedBox(
                 width: MediaQuery.of(context).size.width * 0.5,
                 height: MediaQuery.of(context).size.height * 0.055,
-                child: ElevatedButton(onPressed: () async { 
-                  if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-                    ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Все поля должны быть заполнены.', style: TextStyle(color: Colors.white),), 
-                    backgroundColor: Color.fromARGB(255, 25, 25, 40),));
-                  } else {
-                    var user = await authService.signIn(emailController.text, passwordController.text);
-      
-                    if (user != null) {
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.setBool("isLoggedIn", true);
-      
-                      ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Добро пожаловать, ${user.email!}.', style: TextStyle(color: Colors.white),), 
-                      backgroundColor: Color.fromARGB(255, 25, 25, 40),));
-      
-                      Navigator.popAndPushNamed(context, '/'); 
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () async { 
+                    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Все поля должны быть заполнены.', 
+                            style: TextStyle(color: Colors.white),
+                          ), 
+                          backgroundColor: Color.fromARGB(255, 25, 25, 40),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      );
                     } else {
-                      ScaffoldMessenger.of(context,).showSnackBar(SnackBar(content: Text('Ошибка авторизации.', style: TextStyle(color: Colors.white),), 
-
-                      backgroundColor: Color.fromARGB(255, 25, 25, 40),));
-                    } 
-                  }
-                }, child: Text("Войти", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),),), 
+                      var user = await authService.signIn(emailController.text, passwordController.text);
+      
+                      if (user != null) {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setBool("isLoggedIn", true);
+      
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Добро пожаловать, ${user.email!}.', 
+                              style: TextStyle(color: Colors.white),
+                            ), 
+                            backgroundColor: Color.fromARGB(255, 25, 25, 40),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        );
+      
+                        Navigator.popAndPushNamed(context, '/'); 
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Ошибка авторизации.', 
+                              style: TextStyle(color: Colors.white),
+                            ), 
+                            backgroundColor: Color.fromARGB(255, 25, 25, 40),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        );
+                      } 
+                    }
+                  }, 
+                  child: Text(
+                    "Войти", 
+                    style: TextStyle(
+                      fontSize: 14, 
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white),
+                  ),
+                ), 
               ),
               SizedBox(
                 height: MediaQuery.of(context).size.height * 0.02,
@@ -117,9 +195,24 @@ class _AuthPageState extends State<AuthPage> {
               SizedBox(
                 width: MediaQuery.of(context).size.width * 0.5,
                 height: MediaQuery.of(context).size.height * 0.055,
-                child: OutlinedButton(onPressed: () {
-                  Navigator.popAndPushNamed(context, '/registration');
-                }, child: Text("Зарегистрироваться", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),)),
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.redAccent),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.popAndPushNamed(context, '/registration');
+                  }, 
+                  child: Text(
+                    "Зарегистрироваться", 
+                    style: TextStyle(
+                      fontSize: 14, 
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white),
+                  ),
+                ),
               )
             ],
           ),
